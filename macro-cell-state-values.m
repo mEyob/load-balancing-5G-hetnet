@@ -68,7 +68,7 @@ values = (keys[[#]]->{valueFunction[states[[#]]]/.perfCoeffs, energyValue[states
 
 loads=N[arrRates/servRates];
 loads = StringJoin["-"<>ToString[#]&/@loads];
-filename = "/Users/misikir/Google\ Drive/EIT-Project/code/state_values_load"<>loads<>".json";
+filename = "/Users/misikir/Google\ Drive/EIT-Project/code/json/state_values_load"<>loads<>".json";
 Export[filename,values]
 ];
 {values, perfCoeffs}

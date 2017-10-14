@@ -148,16 +148,59 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
     return {'optimal_beta': opt_beta, 'optimal_policy':policy}
 
 if __name__ == '__main__':
+
+    import argparse
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("m", help='Macro cell arrival rate', type=float)
+    parser.add_argument("s", help='Small cell arrival rate', type=float)
+    parser.add_argument("d", help='Setup delay of small cell.', type=float)
+    parser.add_argument("i", help='Idle timer of small cell', type=float)
+
+    parser.add_argument("-c","--const", help='mean response time constraint.', type=float)
+    parser.add_argument("-t", "--trunc",help='truncation of state space', type=float)
+    parser.add_argument("-l", "--lrnRate", help='learning rate for weight learning algorithm', type=float )
+    parser.add_argument("-f", "--fpi", help="Turn on first policy iteration", action="store_true")
+
+    macro_params = namedtuple('macro_params',['arr_rate', 'serv_rates', 'idle_power', 'busy_power'])
+    small_params = namedtuple('small_params', ['arr_rate', 'serv_rate', 'idle_power', 'busy_power', 'sleep_power', 'setup_power', 'setup_rate', 'switchoff_rate'])
+
+    args = parser.parse_args()
+    
+    ## ===== Setting parameter values
+    macro_arr_rate       = args.m
+    small_arr_rate       = args.s
+    small_setup_rate     = 1/args.d
+    small_switchoff_rate = 1/args.i
+
     delay_constraint = 1.0
     trunc = 10
+    fpi = False
+    learn_rate = 0.1
 
-    states, initial_policy, p, init_resp = init(policy_iteration.macro, policy_iteration.small, trunc)
+    macro = macro_params(macro_arr_rate, [12.34, 6.37], 700, 1000)
+    small = small_params(small_arr_rate, 18.73, 70, 100, 0, 100, small_setup_rate, small_switchoff_rate)
 
-    pi_filename = 'la_'+str(policy_iteration.small.arr_rate)+'-eD_'+str(1/policy_iteration.small.setup_rate)+'-eI_'+str(round(1/policy_iteration.small.switchoff_rate,2))+'.csv'
+    # optional parameter values
+    if args.const:
+        delay_constraint = args.c
+    if args.trunc:
+        trunc = args.t
+    if args.lrnRate:
+        learn_rate = args.l
+    if args.fpi:
+        fpi = True
+    ## =====
+
+
+    states, initial_policy, p, init_resp = init(macro, small, trunc)
+
+    pi_filename = 'la_'+str(small.arr_rate)+'-eD_'+str(1/small.setup_rate)+'-eI_'+str(round(1/small.switchoff_rate,2))+'.csv'
     pi_file = os.path.join(os.path.dirname(os.getcwd()), 'data', pi_filename)
 
-    beta_filename = 'optwgt-eD_'+str(1/policy_iteration.small.setup_rate)+'-con_'+str(delay_constraint)+'.csv'
+    beta_filename = 'optwgt-eD_'+str(1/small.setup_rate)+'-con_'+str(delay_constraint)+'.csv'
     beta_file = os.path.join(os.path.dirname(os.getcwd()), 'data', beta_filename)
 
     with open(beta_file, 'w') as beta_file_handle, open(pi_file, 'w') as pi_file_handle:
-        optimal_weight(policy_iteration.macro, policy_iteration.small, trunc, delay_constraint=delay_constraint, log=beta_file_handle, file=pi_file_handle)
+        optimal_weight(macro, small, trunc, delay_constraint=delay_constraint, learning_rate = learn_rate, fpi=fpi, log=beta_file_handle, file=pi_file_handle)

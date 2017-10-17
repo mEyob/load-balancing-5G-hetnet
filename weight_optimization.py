@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import policy_iteration
 from collections import namedtuple
 import numpy as np
@@ -75,25 +77,31 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
         delay_constraint = 2 * avg_resp_time_init_policy
 
     if log == None:
-        log = sys.stdout
+        logfile = sys.stdout
+    else:
+        logfile = open(log, 'w')
 
-    log.write("\tArrival rate: macro cell = {}, small cell = {} s-1\n".format(macro_params.arr_rate, small_params.arr_rate))
-    log.write("\tSmall cell idle timer: {} s\n".format(1/small_params.switchoff_rate))
-    log.write("\tConstraint: {}\n".format(delay_constraint))
-    log.write("\tFPI: {}\n".format(fpi))
-    log.write("\tInitial policy:\n")
-    log.write("\t\tLoad at macro cell = {:.3f}\n".format(macro_params.arr_rate/macro_params.serv_rates[0] + prob[0]*small_params.arr_rate/macro_params.serv_rates[1]))
-    log.write("\t\tLoad at small cell = {:.3f}\n".format(prob[1]*small_params.arr_rate/small_params.serv_rate))
-    log.write("\n{}\tLEARNING OPTIMAL BETA VALUE...\n\n".format(datetime.now().strftime('%y/%m/%d %H:%M:%S')))
+    logfile.write("\tArrival rate: macro cell = {}, small cell = {} s-1\n".format(macro_params.arr_rate, small_params.arr_rate))
+    logfile.write("\tSmall cell idle timer: {} s\n".format(1/small_params.switchoff_rate))
+    logfile.write("\tConstraint: {}\n".format(delay_constraint))
+    logfile.write("\tFPI: {}\n".format(fpi))
+    logfile.write("\tInitial policy:\n")
+    logfile.write("\t\tLoad at macro cell = {:.3f}\n".format(macro_params.arr_rate/macro_params.serv_rates[0] + prob[0]*small_params.arr_rate/macro_params.serv_rates[1]))
+    logfile.write("\t\tLoad at small cell = {:.3f}\n".format(prob[1]*small_params.arr_rate/small_params.serv_rate))
+    logfile.write("\n{}\tLEARNING OPTIMAL BETA VALUE...\n\n".format(datetime.now().strftime('%y/%m/%d %H:%M:%S')))
     
+    logfile.close()
+
     error, avg_resp_time          = np.inf, np.inf
-    iter_cnt, beta, opt_beta, old_qlen      = 0, 0.0, 0, 0
+    iter_cnt, beta, opt_beta, old_qlen, stable_count      = 0, 0, 0, 0, 0
     
 
     while (error < -ERROR_PCT) or (error > 0):
 
         if iter_cnt == 0:
-            log.write('beta,macro_arrival,small_arrival,avg_idle_time,avg_resp_time,avg_power\n')
+            logfile = open(log, 'a')
+            logfile.write('beta,macro_arrival,small_arrival,avg_idle_time,avg_resp_time,avg_power\n')
+            logfile.close()
 
         elif iter_cnt > MAX_ITERATIONS:
             # If mean response time cannot get close enough
@@ -102,7 +110,8 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
             # known to satisfy the constraint.
 
             message = "\n{}\tBeta value failed to converge in {} iterations\n"
-            log.write(message.format(datetime.now().strftime('%y/%m/%d %H:%M:%S'), MAX_ITERATIONS))
+            with open(log, 'a') as logfile:
+                logfile.write(message.format(datetime.now().strftime('%y/%m/%d %H:%M:%S'), MAX_ITERATIONS))
 
             return opt_beta, result['policy']
 
@@ -119,17 +128,24 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
                     stream=file,
                     header=header
                     )
+
+        delta_pct = np.abs(result['avg_qlen'] - old_qlen)/old_qlen
+
         if old_qlen == result['avg_qlen']:
+            stable_count += 1
+        else:
+            stable_count = 0
+        if stable_count == 3 or delta_pct < 0.01:
             break
         old_qlen = result['avg_qlen']
 
         avg_resp_time = result['avg_qlen']/(small_params.arr_rate + macro_params.arr_rate)
         error         = 100*(avg_resp_time - delay_constraint)/delay_constraint
-
-        log.write(
+        with open(log, 'a') as logfile:
+            logfile.write(
             ','.join(
                 list(
-                    map(str, [beta,macro_params.arr_rate,small_params.arr_rate,round((1/small_params.switchoff_rate),2),avg_resp_time,result['avg_power']])
+                    map(str, [beta,macro_params.arr_rate,small_params.arr_rate,(1/small_params.switchoff_rate),avg_resp_time,result['avg_power']])
                     )
             )+'\n'
         )
@@ -143,7 +159,8 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
 
         
     else:
-        log.write("{}\tExecution completed normally".format(datetime.now().strftime('%y/%m/%d %H:%M:%S')))
+        with open(log, 'a') as logfile:
+            logfile.write("{}\tExecution completed normally".format(datetime.now().strftime('%y/%m/%d %H:%M:%S')))
 
     return {'optimal_beta': opt_beta, 'optimal_policy':policy}
 
@@ -172,7 +189,10 @@ if __name__ == '__main__':
     macro_arr_rate       = args.m
     small_arr_rate       = args.s
     small_setup_rate     = 1/args.d
-    small_switchoff_rate = 1/args.i
+    if args.i < 0.000001:
+        small_switchoff_rate = 1000000    
+    else:        
+        small_switchoff_rate = 1/args.i
 
     delay_constraint = 1.0
     trunc = 10
@@ -184,11 +204,11 @@ if __name__ == '__main__':
 
     # optional parameter values
     if args.const:
-        delay_constraint = args.c
+        delay_constraint = args.const
     if args.trunc:
-        trunc = args.t
+        trunc = args.trunc
     if args.lrnRate:
-        learn_rate = args.l
+        learn_rate = args.lrnRate
     if args.fpi:
         fpi = True
     ## =====
@@ -199,8 +219,8 @@ if __name__ == '__main__':
     pi_filename = 'la_'+str(small.arr_rate)+'-eD_'+str(1/small.setup_rate)+'-eI_'+str(round(1/small.switchoff_rate,2))+'.csv'
     pi_file = os.path.join(os.path.dirname(os.getcwd()), 'data', pi_filename)
 
-    beta_filename = 'optwgt-eD_'+str(1/small.setup_rate)+'-con_'+str(delay_constraint)+'.csv'
+    beta_filename = 'opt_beta_sd-'+str(1/small.setup_rate)+'_ma-'+str(args.m)+'_sa-'+str(args.s)+'_it-'+str(args.i)+'.csv'
     beta_file = os.path.join(os.path.dirname(os.getcwd()), 'data', beta_filename)
 
-    with open(beta_file, 'w') as beta_file_handle, open(pi_file, 'w') as pi_file_handle:
-        optimal_weight(macro, small, trunc, delay_constraint=delay_constraint, learning_rate = learn_rate, fpi=fpi, log=beta_file_handle, file=pi_file_handle)
+    with open(beta_file, 'a') as beta_file_handle:
+        optimal_weight(macro, small, trunc, delay_constraint=delay_constraint, learning_rate = learn_rate, fpi=fpi, log=beta_file_handle, file=None)

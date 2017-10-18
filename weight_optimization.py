@@ -6,10 +6,14 @@ import numpy as np
 import sys
 import os
 from datetime import datetime
+import copy
 
 ERROR_PCT = 10e-1
 
 MAX_ITERATIONS = 50
+
+macro_named_tuple = namedtuple('macro_params',['arr_rate', 'serv_rates', 'idle_power', 'busy_power'])
+small_named_tuple = namedtuple('small_params', ['arr_rate', 'serv_rate', 'idle_power', 'busy_power', 'sleep_power', 'setup_power', 'setup_rate', 'switchoff_rate'])
 
 def init(macro_params, small_params, truncation):
     '''
@@ -43,7 +47,7 @@ def init(macro_params, small_params, truncation):
 
     return states, policy, prob, avg_resp_time_init_policy
 
-def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=None, learning_rate=0.1, fpi=False, log=None, file=None):
+def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=None, learning_rate=0.1, fpi=False, output=None, file=None, verbose=False):
     '''
     A function for learning the weight beta in Cost = mean_response_time + beta * mean_power
     where beta is the Lagrangean multiplier resulting from the constrained optimization
@@ -63,7 +67,7 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
                    in the range (0.1, 1)
     'fpi': stands for First Policy Iteration. If true, policy iteration stops at the first iteration,
            otherwise iteration goes on until the optimal policy is found.
-    'log': a file for logging purpose. If none, standard output is used.
+    'output': a file for writing the output. If none, standard output is used.
 
     Outputs
     ---------
@@ -71,37 +75,39 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
               response time constraint.
     policy: the resulting policy when opt_beta is used '''
 
-    states, initial_policy, prob, avg_resp_time_init_policy = init(macro_params, small_params, truncation)
-    
+    log = output[:-3] + 'log'    
     if delay_constraint == None:
-        delay_constraint = 2 * avg_resp_time_init_policy
-
-    if log == None:
-        logfile = sys.stdout
+        small_baseline = small_named_tuple(small_params.arr_rate, small_params.serv_rate, small_params.idle_power,small_params.busy_power, small_params.sleep_power,small_params.setup_power, small_params.setup_rate, 1e7)  
+        
+        states, initial_policy, prob, avg_resp_time_init_policy = init(macro_params, small_baseline, truncation)
+        
+        delay_constraint = avg_resp_time_init_policy
     else:
-        logfile = open(log, 'w')
+        states, initial_policy, prob, avg_resp_time_init_policy = init(macro_params, small_params, truncation)
 
-    logfile.write("\tArrival rate: macro cell = {}, small cell = {} s-1\n".format(macro_params.arr_rate, small_params.arr_rate))
-    logfile.write("\tSmall cell idle timer: {} s\n".format(1/small_params.switchoff_rate))
-    logfile.write("\tConstraint: {}\n".format(delay_constraint))
-    logfile.write("\tFPI: {}\n".format(fpi))
-    logfile.write("\tInitial policy:\n")
-    logfile.write("\t\tLoad at macro cell = {:.3f}\n".format(macro_params.arr_rate/macro_params.serv_rates[0] + prob[0]*small_params.arr_rate/macro_params.serv_rates[1]))
-    logfile.write("\t\tLoad at small cell = {:.3f}\n".format(prob[1]*small_params.arr_rate/small_params.serv_rate))
-    logfile.write("\n{}\tLEARNING OPTIMAL BETA VALUE...\n\n".format(datetime.now().strftime('%y/%m/%d %H:%M:%S')))
+    outputfile = open(output, 'w')
+
+    outputfile.write("\tArrival rate: macro cell = {}, small cell = {} s-1\n".format(macro_params.arr_rate, small_params.arr_rate))
+    outputfile.write("\tSmall cell idle timer: {} s\n".format(1/small_params.switchoff_rate))
+    outputfile.write("\tConstraint: {}\n".format(delay_constraint))
+    outputfile.write("\tFPI: {}\n".format(fpi))
+    outputfile.write("\tInitial policy:\n")
+    outputfile.write("\t\tLoad at macro cell = {:.3f}\n".format(macro_params.arr_rate/macro_params.serv_rates[0] + prob[0]*small_params.arr_rate/macro_params.serv_rates[1]))
+    outputfile.write("\t\tLoad at small cell = {:.3f}\n".format(prob[1]*small_params.arr_rate/small_params.serv_rate))
+    outputfile.write("\n{}\tLEARNING OPTIMAL BETA VALUE...\n\n".format(datetime.now().strftime('%y/%m/%d %H:%M:%S')))
     
-    logfile.close()
+    outputfile.close()
 
-    error, avg_resp_time          = np.inf, np.inf
-    iter_cnt, beta, opt_beta, old_qlen, stable_count      = 0, 0, 0, 0, 0
-    
+    error_pct, avg_resp_time          = np.inf, np.inf
+    iter_cnt, beta, opt_beta, stable_count      = 0, 0, 0, 0
+    old_policy = copy.copy(initial_policy)
 
-    while (error < -ERROR_PCT) or (error > 0):
+    while error_pct > ERROR_PCT:
 
         if iter_cnt == 0:
-            logfile = open(log, 'a')
-            logfile.write('beta,macro_arrival,small_arrival,avg_idle_time,avg_resp_time,avg_power\n')
-            logfile.close()
+            outputfile = open(output, 'a')
+            outputfile.write('beta,macro_arrival,small_arrival,avg_idle_time,avg_resp_time,avg_power\n')
+            outputfile.close()
 
         elif iter_cnt > MAX_ITERATIONS:
             # If mean response time cannot get close enough
@@ -126,23 +132,47 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
                     beta=beta,
                     fpi=fpi,
                     stream=file,
+                    verbose=verbose,
                     header=header
                     )
 
-        delta_pct = np.abs(result['avg_qlen'] - old_qlen)/old_qlen
+        # ======= STOPPING CONDITIONS ========
+        #delta_pct = 100 * np.abs(result['avg_power'] - old_power)/result['avg_power']
 
-        if old_qlen == result['avg_qlen']:
+        if old_policy == result['policy']:
             stable_count += 1
         else:
             stable_count = 0
-        if stable_count == 3 or delta_pct < 0.01:
+        if stable_count == 2: # or delta_pct < 0.01:
+            with open(log, 'a') as logfile:
+                logfile.write('Weight learning halted! Policy stable for {} successive values of beta\n'.format(stable_ count))
             break
-        old_qlen = result['avg_qlen']
+       
+        old_policy = copy.copy(result['policy'])
 
         avg_resp_time = result['avg_qlen']/(small_params.arr_rate + macro_params.arr_rate)
-        error         = 100*(avg_resp_time - delay_constraint)/delay_constraint
-        with open(log, 'a') as logfile:
-            logfile.write(
+        error         = delay_constraint - avg_resp_time
+        error_pct     = 100 * np.abs(error) / delay_constraint 
+
+        if beta == 0 and error > 0:
+            with open(log, 'a') as f:
+                f.write('\nResponse time constraint cannot be met\n')
+                f.write('Best case scenario: E[T] = {}, E[P] = {}\n'.format(avg_resp_time, result['avg_power'])) 
+        # ===================================
+        
+        # ======= CHECKING OPTIMAL POLICY ====
+        macro_decisions, small_decisions = 0, 0
+        for pol in result['policy']:
+            macro_decisions += pol[0]
+            small_decisions += pol[1]
+        with open('policy.txt', 'a') as policyfile:
+            policyfile.write('\nBeta = {}\n'.format(beta))
+
+            policyfile.write('\nTo macro {}, to small {}\n'.format(macro_decisions, small_decisions))
+        # ====================================
+
+        with open(output, 'a') as outputfile:
+            outputfile.write(
             ','.join(
                 list(
                     map(str, [beta,macro_params.arr_rate,small_params.arr_rate,(1/small_params.switchoff_rate),avg_resp_time,result['avg_power']])
@@ -155,12 +185,11 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
             policy = result['policy']
                 
         iter_cnt += 1
-        beta = beta + learning_rate *(1 /iter_cnt) * (delay_constraint - avg_resp_time)
-
+        beta = beta + learning_rate *(1 /iter_cnt) * error
         
     else:
         with open(log, 'a') as logfile:
-            logfile.write("{}\tExecution completed normally".format(datetime.now().strftime('%y/%m/%d %H:%M:%S')))
+            logfile.write("{}\tExecution completed normally: \n\tResponse time within specified error margin of constraint".format(datetime.now().strftime('%y/%m/%d %H:%M:%S')))
 
     return {'optimal_beta': opt_beta, 'optimal_policy':policy}
 
@@ -180,8 +209,6 @@ if __name__ == '__main__':
     parser.add_argument("-l", "--lrnRate", help='learning rate for weight learning algorithm', type=float )
     parser.add_argument("-f", "--fpi", help="Turn on first policy iteration", action="store_true")
 
-    macro_params = namedtuple('macro_params',['arr_rate', 'serv_rates', 'idle_power', 'busy_power'])
-    small_params = namedtuple('small_params', ['arr_rate', 'serv_rate', 'idle_power', 'busy_power', 'sleep_power', 'setup_power', 'setup_rate', 'switchoff_rate'])
 
     args = parser.parse_args()
     
@@ -194,13 +221,13 @@ if __name__ == '__main__':
     else:        
         small_switchoff_rate = 1/args.i
 
-    delay_constraint = 1.0
-    trunc = 10
+    delay_constraint = None
+    trunc = 15
     fpi = False
-    learn_rate = 0.1
+    learn_rate = 1
 
-    macro = macro_params(macro_arr_rate, [12.34, 6.37], 700, 1000)
-    small = small_params(small_arr_rate, 18.73, 70, 100, 0, 100, small_setup_rate, small_switchoff_rate)
+    macro = macro_named_tuple(macro_arr_rate, [12.34, 6.37], 700, 1000)
+    small = small_named_tuple(small_arr_rate, 18.73, 70, 100, 0, 100, small_setup_rate, small_switchoff_rate)
 
     # optional parameter values
     if args.const:
@@ -214,13 +241,29 @@ if __name__ == '__main__':
     ## =====
 
 
-    states, initial_policy, p, init_resp = init(macro, small, trunc)
+    
 
-    pi_filename = 'la_'+str(small.arr_rate)+'-eD_'+str(1/small.setup_rate)+'-eI_'+str(round(1/small.switchoff_rate,2))+'.csv'
-    pi_file = os.path.join(os.path.dirname(os.getcwd()), 'data', pi_filename)
+    pi_filename = 'laM-'+str(args.m)+'_laS-'+str(args.s)+'_eD-'+str(args.d)+'_eI-'+str(args.i)+'.csv'
+    pi_filename = os.path.join(os.path.dirname(os.getcwd()), 'data','pi', pi_filename)
 
     beta_filename = 'opt_beta_sd-'+str(1/small.setup_rate)+'_ma-'+str(args.m)+'_sa-'+str(args.s)+'_it-'+str(args.i)+'.csv'
-    beta_file = os.path.join(os.path.dirname(os.getcwd()), 'data', beta_filename)
+    beta_filename = os.path.join(os.path.dirname(os.getcwd()), 'data','beta-updates', beta_filename)
 
-    with open(beta_file, 'a') as beta_file_handle:
-        optimal_weight(macro, small, trunc, delay_constraint=delay_constraint, learning_rate = learn_rate, fpi=fpi, log=beta_file_handle, file=None)
+
+
+    result = optimal_weight(
+        macro,
+        small,
+        trunc,
+        delay_constraint=delay_constraint,
+        learning_rate=learn_rate,
+        fpi=fpi,
+        output=beta_filename,
+        file=pi_filename,
+        verbose=True)
+
+    policy = result['optimal_policy']
+
+    with open("opt_policy_beta_"+str(result['optimal_beta']), 'w') as f:
+        for entry in policy:
+            f.write(str(entry[0]) + ', ' + str(entry[1]) + '\n')

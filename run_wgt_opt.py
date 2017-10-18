@@ -33,7 +33,7 @@ learn_rate = 1
 
 macro_arr_rate   = float(inputs[0])
 small_arr_rate   = float(inputs[1])
-small_setup_rate = float(inputs[2])
+small_setup_rate = 1 / float(inputs[2])
 small_switchoff_rate = 1 / float(inputs[3])
 
 macro_params = namedtuple('macro_params',['arr_rate', 'serv_rates', 'idle_power', 'busy_power'])
@@ -57,7 +57,7 @@ if args.fpi:
 states, initial_policy, p, init_resp = weight_optimization.init(macro, small, trunc)   
 
 beta_filename = 'opt_beta_sd-'+inputs[2]+'_ma-'+inputs[0]+'_sa-'+inputs[1]+'_it-'+inputs[3]+'.csv'
-beta_file = os.path.join(os.path.dirname(os.getcwd()), 'data', beta_filename) 
+beta_file = os.path.join(os.path.dirname(os.getcwd()), 'data', inputs[2], beta_filename) 
 
 weight_optimization.optimal_weight(
         macro, 

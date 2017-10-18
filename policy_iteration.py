@@ -316,7 +316,8 @@ def policy_iteration(state_space, initial_policy, macro_params, small_params, tr
     ))
     
     if verbose:
-        print_stats(print_dict, stream, header)
+        with open(stream, 'a') as f:
+            print_stats(print_dict, f, header)
     
     while True:
         
@@ -345,7 +346,7 @@ def policy_iteration(state_space, initial_policy, macro_params, small_params, tr
 
             if value_diff_macro < value_diff_small:
                 policy[cur_index] = (1, 0)
-            elif value_diff_macro > value_diff_small:
+            else:
                 policy[cur_index] = (0, 1)
             
             if list(old) != list(policy[cur_index]):
@@ -366,7 +367,8 @@ def policy_iteration(state_space, initial_policy, macro_params, small_params, tr
         ))
         
         if verbose:
-            print_stats(print_dict, stream)
+            with open(stream, 'a') as f:
+                print_stats(print_dict, f)
 
 
     result = {

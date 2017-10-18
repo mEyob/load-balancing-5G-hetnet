@@ -270,7 +270,7 @@ def direct_policy_eval(state_space, transition_rate):
 
     return results
 
-def policy_iteration(state_space, initial_policy, macro_params, small_params, truncation, beta, stream=None, fpi=True, header=True):
+def policy_iteration(state_space, initial_policy, macro_params, small_params, truncation, beta, stream=None, fpi=True, verbose=False, header=True):
     '''
     For a given system defined by its parameters and state_space, this function
     constructs an optimal policy starting from the initial_policy using the policy
@@ -314,8 +314,10 @@ def policy_iteration(state_space, initial_policy, macro_params, small_params, tr
     ('avg_power'  , policy_eval['avg_energy_reward']),
     ('beta'      , beta)
     ))
-        
-    print_stats(print_dict, stream, header)
+    
+    if verbose:
+        with open(stream, 'a') as f:
+            print_stats(print_dict, f, header)
     
     while True:
         
@@ -344,7 +346,7 @@ def policy_iteration(state_space, initial_policy, macro_params, small_params, tr
 
             if value_diff_macro < value_diff_small:
                 policy[cur_index] = (1, 0)
-            elif value_diff_macro > value_diff_small:
+            else:
                 policy[cur_index] = (0, 1)
             
             if list(old) != list(policy[cur_index]):
@@ -364,7 +366,9 @@ def policy_iteration(state_space, initial_policy, macro_params, small_params, tr
         ('beta'      , beta)
         ))
         
-        print_stats(print_dict, stream)
+        if verbose:
+            with open(stream, 'a') as f:
+                print_stats(print_dict, f)
 
 
     result = {

@@ -15,5 +15,6 @@ for laMac in [2, 5]:
             arg_params.append([laMac, laS, setup_delay, idle])
 
 for i, params in enumerate(arg_params):
+
     with open('inputparams/input_'+str(i)+'.txt', 'w') as f:
         f.write(' '.join(list(map(str, params))))

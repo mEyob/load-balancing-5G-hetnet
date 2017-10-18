@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import policy_iteration
 from collections import namedtuple
 import numpy as np
@@ -87,7 +89,7 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
     log.write("\n{}\tLEARNING OPTIMAL BETA VALUE...\n\n".format(datetime.now().strftime('%y/%m/%d %H:%M:%S')))
     
     error, avg_resp_time          = np.inf, np.inf
-    iter_cnt, beta, opt_beta, old_qlen      = 0, 0.0, 0, 0
+    iter_cnt, beta, opt_beta, old_qlen, stable_count      = 0, 0, 0, 0, 0
     
 
     while (error < -ERROR_PCT) or (error > 0):
@@ -120,6 +122,10 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
                     header=header
                     )
         if old_qlen == result['avg_qlen']:
+            stable_count += 1
+        else:
+            stable_count = 0
+        if stable_count == 3:
             break
         old_qlen = result['avg_qlen']
 
@@ -143,7 +149,7 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
 
         
     else:
-        log.write("{}\tExecution completed normally".format(datetime.now().strftime('%y/%m/%d %H:%M:%S')))
+        log.write("\n{}\tExecution completed normally".format(datetime.now().strftime('%y/%m/%d %H:%M:%S')))
 
     return {'optimal_beta': opt_beta, 'optimal_policy':policy}
 
@@ -174,7 +180,7 @@ if __name__ == '__main__':
     small_setup_rate     = 1/args.d
     small_switchoff_rate = 1/args.i
 
-    delay_constraint = 1.0
+    delay_constraint = None
     trunc = 10
     fpi = False
     learn_rate = 0.1
@@ -196,10 +202,10 @@ if __name__ == '__main__':
 
     states, initial_policy, p, init_resp = init(macro, small, trunc)
 
-    pi_filename = 'la_'+str(small.arr_rate)+'-eD_'+str(1/small.setup_rate)+'-eI_'+str(round(1/small.switchoff_rate,2))+'.csv'
+    pi_filename = 'eD-'+str(args.d)+'_mA-'+str(args.m)+'_sA-'+str(args.s)+'_eI-'+str(round(args.i,4))+'_pi'+'.csv'
     pi_file = os.path.join(os.path.dirname(os.getcwd()), 'data', pi_filename)
 
-    beta_filename = 'optwgt-eD_'+str(1/small.setup_rate)+'-con_'+str(delay_constraint)+'.csv'
+    beta_filename = 'eD-'+str(args.d)+'_mA-'+str(args.m)+'_sA-'+str(args.s)+'_eI-'+str(round(args.i,4))+'_optwgt'+'.csv'
     beta_file = os.path.join(os.path.dirname(os.getcwd()), 'data', beta_filename)
 
     with open(beta_file, 'w') as beta_file_handle, open(pi_file, 'w') as pi_file_handle:

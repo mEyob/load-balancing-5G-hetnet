@@ -145,7 +145,7 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
             stable_count = 0
         if stable_count == 2: # or delta_pct < 0.01:
             with open(log, 'a') as logfile:
-                logfile.write('Weight learning halted! Policy stable for {} successive values of beta\n'.format(stable_ count))
+                logfile.write('Weight learning halted! Policy stable for {} successive values of beta\n'.format(stable_count))
             break
        
         old_policy = copy.copy(result['policy'])

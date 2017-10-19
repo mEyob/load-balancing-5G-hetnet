@@ -96,3 +96,47 @@ To macro 550.6558239005083, to small 7641.34417609949
 Beta = 0.010282559051223621
 
 To macro 550.6558239005083, to small 7641.34417609949
+
+Beta = 0
+
+To macro 626.0, to small 7566.0
+
+Beta = -0.003948237271070187
+
+To macro 650.0, to small 7542.0
+
+Beta = 0
+
+To macro 626.0, to small 7566.0
+
+Beta = 0.05605176272892981
+
+To macro 481.0, to small 7711.0
+
+Beta = 0
+
+To macro 626.0, to small 7566.0
+
+Beta = 0.05605176272892981
+
+To macro 481.0, to small 7711.0
+
+Beta = 0.06344177161519864
+
+To macro 480.0, to small 7712.0
+
+Beta = 0.06836776545370987
+
+To macro 480.0, to small 7712.0
+
+Beta = 0
+
+To macro 626.0, to small 7566.0
+
+Beta = 0.01605176272892983
+
+To macro 543.0, to small 7649.0
+
+Beta = 0.01115135241244343
+
+To macro 562.0, to small 7630.0

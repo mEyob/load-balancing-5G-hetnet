@@ -139,7 +139,7 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
         # ======= STOPPING CONDITIONS ========
         #delta_pct = 100 * np.abs(result['avg_power'] - old_power)/result['avg_power']
 
-        if old_policy == result['policy']:
+        if np.all(old_policy == result['policy']):
             stable_count += 1
         else:
             stable_count = 0
@@ -154,10 +154,11 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
         error         = delay_constraint - avg_resp_time
         error_pct     = 100 * np.abs(error) / delay_constraint 
 
-        if beta == 0 and error > 0:
+        if beta == 0 and error < 0:
             with open(log, 'a') as f:
                 f.write('\nResponse time constraint cannot be met\n')
-                f.write('Best case scenario: E[T] = {}, E[P] = {}\n'.format(avg_resp_time, result['avg_power'])) 
+                f.write('Best case scenario: E[T] = {}, E[P] = {}\n'.format(avg_resp_time, result['avg_power']))
+                break 
         # ===================================
         
         # ======= CHECKING OPTIMAL POLICY ====
@@ -189,7 +190,7 @@ def optimal_weight(macro_params, small_params, truncation, * , delay_constraint=
         
     else:
         with open(log, 'a') as logfile:
-            logfile.write("{}\tExecution completed normally: \n\tResponse time within specified error margin of constraint".format(datetime.now().strftime('%y/%m/%d %H:%M:%S')))
+            logfile.write("{}\tExecution completed normally: \n\tResponse time within specified error margin of constraint\n".format(datetime.now().strftime('%y/%m/%d %H:%M:%S')))
 
     return {'optimal_beta': opt_beta, 'optimal_policy':policy}
 

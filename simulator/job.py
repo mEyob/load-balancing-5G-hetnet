@@ -16,6 +16,9 @@ class Job:
     def reduce_size(self, size):
         self._remaining_size -= size
 
+    def get_size(self):
+        return self._remaining_size
+
     def stats(self, now):
         '''
         Online statistics collection for 
@@ -33,7 +36,7 @@ class Job:
             stream = sys.stdout
         stream.write('Total jobs: {}\n'.format(Job.num_of_jobs))
         stream.write('\tAverage response time {}\n'.format(Job.avg_resp_time))
-        stream.write('\tVariance of response time {}\n'.format(Job.var_resp_time))
+        stream.write('\tVariance of response time {}\n'.format(Job.var_resp_time / (Job.num_of_jobs - 1)))
 
     def __repr__(self):
         return 'Job(arrival_time={!r}, _remaining_size={!r}, origin={!r})'.format(self._arr_time, self._remaining_size, self.origin)

@@ -36,7 +36,7 @@ class Cell:
         until 'now' assuming resources are equally shared among
         the queued jobs.
         '''
-        if self.count() > 0:
+        if self.count() > 0 and self.state == 'bsy':
             att_service = (now - sim_time)/self.count()
             for job in self.queue:
                 job.reduce_size(att_service)
@@ -49,7 +49,6 @@ class Cell:
 
     def arrival(self, job, sim_time):
 
-        # SUBSTITUTE BELOW LINES BY A CALL TO event_handler TO HANDLE POSSIBLE ENERGY STATE CHANGES!!
         self.event_handler('arr', job._arr_time)
         
         self.attained_service(job._arr_time, sim_time)
@@ -66,7 +65,7 @@ class Cell:
 
         self.attained_service(now, sim_time)
 
-        print(self.queue[0]._remaining_size)
+        #print(self.queue[0]._remaining_size)
 
         self.queue[0].stats(now)
 

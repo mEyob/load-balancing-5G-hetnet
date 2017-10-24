@@ -22,6 +22,8 @@ class Cell:
         self.queue     = []
         self.job_count = 0         # Total number of jobs is initially zero
 
+        self.total_energy  = 0
+
     def count(self):
         return len(self.queue)
     
@@ -36,7 +38,7 @@ class Cell:
         until 'now' assuming resources are equally shared among
         the queued jobs.
         '''
-        if self.count() > 0:
+        if self.count() > 0 and self.state == 'bsy':
             att_service = (now - sim_time)/self.count()
             for job in self.queue:
                 job.reduce_size(att_service)
@@ -49,8 +51,7 @@ class Cell:
 
     def arrival(self, job, sim_time):
 
-        # SUBSTITUTE BELOW LINES BY A CALL TO event_handler TO HANDLE POSSIBLE ENERGY STATE CHANGES!!
-        self.event_handler('arr', job._arr_time)
+        self.event_handler('arr', job._arr_time, sim_time)
         
         self.attained_service(job._arr_time, sim_time)
 
@@ -62,15 +63,28 @@ class Cell:
         self.queue.sort(key = lambda job: job._remaining_size)
         self.job_count += 1
 
-    def departure(self, now, sim_time):
+    def departure(self, now, sim_time, warm_up):
 
         self.attained_service(now, sim_time)
 
-        print(self.queue[0]._remaining_size)
+        #print(self.queue[0]._remaining_size)
 
-        self.queue[0].stats(now)
+        if not warm_up:
+            self.queue[0].stats(now)
 
         self.queue.pop()
 
-        self.event_handler('dep', now)
+        self.event_handler('dep', now, sim_time)
+
+
+    def power_stats(self, now, sim_time):
+
+        if self.state == 'idl':  
+            self.total_energy += (now - sim_time) * self.idl_power
+        elif self.state == 'bsy':
+            self.total_energy += (now - sim_time) * self.bsy_power
+        elif self.state == 'stp':
+            self.total_energy += (now - sim_time) * self.stp_power
+        elif self.state == 'slp':
+            self.total_energy += (now - sim_time) * self.slp_power
 

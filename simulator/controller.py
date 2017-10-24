@@ -9,8 +9,11 @@ from hetNet import MacroCell, SmallCell
 from generator import TraffGenerator
 from job import Job
 
+import sys
 from collections import namedtuple
 import numpy as np
+
+
 from pprint import pprint
 
 class Controller:
@@ -23,29 +26,35 @@ class Controller:
         self.now        = 0
 
         for ID in range(K+1):
-            # if ID == 0:
-            #     arr_time = self.generators[ID].generate(self.sim_time)
-            #     self.events[(ID, 'a')] = arr_time
-            #     self.events[(ID, 'd')] = np.inf
-
-            # else:
             arr_time = self.generators[ID].generate(self.sim_time)
             self.events[(ID, 'a')] = arr_time
             self.events[(ID, 'd')] = np.inf
             self.events[(ID, 'i')] = np.inf
             self.events[(ID, 's')] = np.inf
 
-        # print(self.events)
-        
-        # j     = Job(11, 1)
-        # j2    = Job(14, 1)
-        # self.generators[1].dispatcher(j, self.sim_time)
+    def write_power_stats(self, tot_time, stream=None):
 
-        # [print(cell) for cell in self.cells]
+        if stream == None:
+            stream = sys.stdout
+
+        tot_energy = sum([cell.total_energy for cell in self.cells])
+
+        stream.write('\nAverage power consumption: {:10.3f}\n'.format(tot_energy / tot_time))
+
+
 
     def simulate(self, max_time):
+        '''
+        A method for controlling the flow of simulation by tracking job arrival, job
+        completion in macro and small cells, and idle timer expiration and setup 
+        completion in small cells. These events are read and written into the 'events'
+        attribute (which is a dictionary) of the 'Controller' class.
+        '''
+
+        warm_up_time = 0.05 * max_time
 
         while self.sim_time < max_time:
+        # To simulate specific number of jobs, use => while Job.num_of_jobs < max_jobs:
 
             ID, event = min(self.events, key=self.events.get) # (ID, event) where event = 'a', 'd', 'i' or 's'
             cell      = self.cells[ID]
@@ -53,6 +62,10 @@ class Controller:
             self.now  = self.events[(ID, event)]
             # reduce remainging size of all jobs in all cells excep the cell in Q. Elapsed time = now - sim_time
             [cel.attained_service(self.now, self.sim_time) for cel in self.cells if cell.ID != ID]
+
+            # Energy related statistics
+            if self.sim_time > warm_up_time:
+                [cel.power_stats(self.now, self.sim_time) for cel in self.cells]
 
             if event == 'a':
                 
@@ -77,9 +90,10 @@ class Controller:
             elif event == 'd':
 
                 # Handle departure by processing completed job
-                cell.departure(self.now, self.sim_time)
+                cell.departure(self.now, self.sim_time, self.sim_time < warm_up_time)
                 
-                # No more departures from cell if queue is empty. Add idle time expiration to possible events.
+                # No more departures from cell if queue is empty, in which case we need to 
+                # add idle time expiration to possible events.
                 if cell.count() == 0:
                     self.events[(ID, 'd')] = np.inf
                     if ID != 0:
@@ -91,14 +105,14 @@ class Controller:
 
             elif event == 'i':
 
-                cell.event_handler('tmr_exp', self.now)
+                cell.event_handler('tmr_exp', self.now, self.sim_time)
                 self.events[(ID, 'i')] = cell.idl_time
 
                 self.sim_time = self.now
 
             elif event == 's':
 
-                cell.event_handler('stp_cmp', self.now)
+                cell.event_handler('stp_cmp', self.now, self.sim_time)
 
                 self.events[(ID, 'd')] = self.now + cell.queue[0].get_size() * cell.count()
                 self.events[(ID, 's')] = cell.stp_time
@@ -106,21 +120,30 @@ class Controller:
                 self.sim_time = self.now
      
         Job.write_stats()
+        self.write_power_stats(max_time - warm_up_time)
 
 
 
  
 
+if __name__ == '__main__':
 
+    import line_profiler
 
-macro_params = namedtuple('macro_params',['arr_rate', 'serv_rate', 'idl_power', 'bsy_power'])
-small_params = namedtuple('small_params', ['arr_rate', 'serv_rate', 'idl_power', 'bsy_power', 'slp_power', 'stp_power', 'stp_rate', 'switchoff_rate'])
+    macro_params = namedtuple('macro_params',['arr_rate', 'serv_rate', 'idl_power', 'bsy_power'])
+    small_params = namedtuple('small_params', ['arr_rate', 'serv_rate', 'idl_power', 'bsy_power', 'slp_power', 'stp_power', 'stp_rate', 'switchoff_rate'])
 
-macro = macro_params(4, [12.34, 6.37], 700, 1000)
-small = small_params(9, 18.73, 70, 100, 0, 100, 10, 1000000)
+    macro = macro_params(4, [12.34, 6.37], 700, 1000)
+    small = small_params(9, 18.73, 70, 100, 0, 100, 10, 1000000)
 
-c = Controller(macro, small, 1)
+    # lp = line_profiler.LineProfiler() # initialize a LineProfiler object
+    # c = Controller(macro, small, 1)
+    # prof = lp(c.simulate) # create a wrapper function and assign to prof
+    # prof(10000)
 
-pprint(c.events)
+    # lp.print_stats()
+    c = Controller(macro, small, 1)
 
-c.simulate(100000)
+    pprint(c.events)
+
+    c.simulate(100000)

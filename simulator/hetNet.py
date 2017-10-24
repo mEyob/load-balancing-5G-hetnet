@@ -20,7 +20,7 @@ class MacroCell(Cell):
         '''
         return self.generate_interval(self.serv_rate[origin_id])
 
-    def event_handler(self, event, now):
+    def event_handler(self, event, now, sim_time):
 
         if event == 'arr':
             if self.state == 'idl':
@@ -52,7 +52,8 @@ class SmallCell(Cell):
     def serv_size(self, *args):
         return self.generate_interval(self.serv_rate)
 
-    def event_handler(self, event, now):
+    def event_handler(self, event, now, sim_time):
+
         if event == 'arr':
             if self.state == 'idl':
                 self.state = 'bsy'

@@ -25,6 +25,8 @@ class Cell:
 
         self.total_energy  = 0
 
+        self.values       = {}
+
     def count(self):
         return len(self.queue)
     

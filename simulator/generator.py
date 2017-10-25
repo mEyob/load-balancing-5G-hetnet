@@ -1,4 +1,6 @@
 
+import random
+
 class TraffGenerator:
 	'''
 	A traffic generator class to be 'attached' to a 
@@ -25,3 +27,23 @@ class TraffGenerator:
 
 		else:
 			self.macro_cell.arrival(job, sim_time)
+
+	def rnd_dispatcher(self, job, sim_time, prob):
+
+		if job.origin == 0:
+			self.macro_cell.arrival(job, sim_time)
+
+		else:
+			u = random.random()
+			if u < prob:
+				self.macro_cell.arrival(job, sim_time)
+			else:
+				self.small_cell.arrival(job, sim_time)
+
+	def fpi_dispatcher(self, job, sim_time, value_macro, value_small):
+
+		if value_macro < value_small:
+			self.macro_cell.arrival(job, sim_time)
+		else:
+			self.small_cell.arrival(job, sim_time)
+

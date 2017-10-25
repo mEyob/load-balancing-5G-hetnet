@@ -41,9 +41,19 @@ class Controller:
 
         stream.write('\nAverage power consumption: {:10.3f}\n'.format(tot_energy / tot_time))
 
+    def compute_values(self, truncation, homogen=True):
+
+        small_cell_arrivals = [cell.arr_rate for cell in self.cells[1:]]
+
+        self.cells[0].compute_values(small_cell_arrivals, truncation)
+        self.cells[0].load_values(small_cell_arrivals)
+
+        if homogen:
+            
 
 
-    def simulate(self, max_time):
+
+    def simulate(self, dispatcher, max_time, prob=0.5):
         '''
         A method for controlling the flow of simulation by tracking job arrival, job
         completion in macro and small cells, and idle timer expiration and setup 
@@ -52,6 +62,8 @@ class Controller:
         '''
 
         warm_up_time = 0.05 * max_time
+
+        self.compute_values()
 
         while self.sim_time < max_time:
         # To simulate specific number of jobs, use => while Job.num_of_jobs < max_jobs:
@@ -70,7 +82,15 @@ class Controller:
             if event == 'a':
                 
                 j = Job(self.now, ID)
-                self.generators[ID].jsq_dispatcher(j, self.sim_time)
+
+                if dispatcher == 'jsq' or ID == 0:
+                    self.generators[ID].jsq_dispatcher(j, self.sim_time)
+                elif dispatcher == 'rnd':
+                    self.generators[ID].rnd_dispatcher(j, self.sim_time, prob)
+
+
+
+                    #self.generators[ID].fpi_dispatcher()
 
                 if ID != 0:
                     self.events[(ID, 'i')] = cell.idl_time
@@ -144,6 +164,10 @@ if __name__ == '__main__':
     # lp.print_stats()
     c = Controller(macro, small, 1)
 
-    pprint(c.events)
+    # pprint(c.events)
 
-    c.simulate(10000)
+    c.simulate('rnd', 100000)
+
+    d = Controller(macro, small, 1)
+
+    d.simulate('jsq', 100000)

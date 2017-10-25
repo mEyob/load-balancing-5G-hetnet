@@ -6,6 +6,8 @@ import subprocess, os, json
 
 class MacroCell(Cell):
 
+    values = {}
+
     def __init__(self, ID, parameters):
         Cell.__init__(self, ID, parameters)
         self._allowed_states = ('idl', 'bsy')
@@ -27,13 +29,8 @@ class MacroCell(Cell):
         elif event == 'dep':
             if self.count() == 0:
                 self.state = 'idl'
-
-    def __repr__(self):
-
-        return 'This is a macro cell: \n\t {!r}'.format(self.__dict__)
-
     
-    def values(self, small_cell_arrivals, truncation):
+    def compute_values(self, small_cell_arrivals, truncation):
 
         rates = [self.arr_rate]
         rates.extend(small_cell_arrivals)
@@ -61,14 +58,16 @@ class MacroCell(Cell):
         with open(filename) as value_data:
             values = json.load(value_data)
 
-        return values
-        
+        self.values = values
+    
+
+    def __repr__(self):
+
+        return 'This is a macro cell: \n\t {!r}'.format(self.__dict__)
 
 
 
 class SmallCell(Cell):
-
-    values = {}
 
     def __init__(self, ID, parameters):
         Cell.__init__(self, ID, parameters)
@@ -81,6 +80,7 @@ class SmallCell(Cell):
         self.avg_idl_time = 1/parameters.switchoff_rate
         self.idl_time     = np.inf
         self.stp_time     = np.inf
+
 
     def serv_size(self, *args):
         return self.generate_interval(self.serv_rate)
@@ -111,11 +111,13 @@ class SmallCell(Cell):
             self.idl_time = np.inf
     
     @staticmethod
-    def state_value(params, state, beta, truncation):
+    def state_value(params, state, truncation):
         '''
         Input:
         -----
-        'beta': energy weight
+        'params'
+        'state': A state whose value needs to be determined.
+        'truncation': Truncation point of the multidimensional Markov chain.
         Output
         ------
         'value': performance and energy values of of the state, i.e. quantifiers of 
@@ -124,7 +126,7 @@ class SmallCell(Cell):
 
 
         if state == ('idl',0):
-            return 0
+            return 0, 0
         arr_rate, serv_rate, setup_rate, switchoff_rate  = params.arr_rate, params.serv_rate, params.stp_rate, 1/params.switchoff_rate 
         setup_power, idle_power, busy_power, sleep_power = params.stp_power, params.idl_power, params.bsy_power, params.slp_power
         
@@ -134,7 +136,7 @@ class SmallCell(Cell):
         if state == ('stp',0):
             perf_value   = arr_rate*(setup_rate + arr_rate)/(setup_rate*denom) + (arr_rate**2 * (setup_rate+arr_rate)/(setup_rate*denom*(serv_rate-arr_rate)))
             energy_value = (setup_power - idle_power)/(switchoff_rate+setup_rate) + setup_rate*((switchoff_rate+setup_rate)*sleep_power - (setup_power + setup_rate*idle_power))/((setup_rate + switchoff_rate)*denom)
-            return perf_value + beta * energy_value
+            return perf_value, energy_value
         
         perf_value   = n * (n + 1)/(2 * (serv_rate - arr_rate)) - (n * arr_rate/(setup_rate*(serv_rate - arr_rate)))*(switchoff_rate*setup_rate + switchoff_rate*arr_rate)/denom
         energy_value = (n/serv_rate) * (busy_power - (switchoff_rate*setup_rate*sleep_power + switchoff_rate*arr_rate*setup_power + arr_rate*setup_rate*idle_power)/denom)
@@ -143,21 +145,21 @@ class SmallCell(Cell):
             energy_value = energy_value + (arr_rate*(setup_power - idle_power) + switchoff_rate*(setup_power - sleep_power))/denom
             perf_value   = n * (n + 1)/(2 * (serv_rate - arr_rate)) + (n/setup_rate) + (arr_rate**2 * (serv_rate + n*setup_rate)/(setup_rate*denom*(serv_rate-arr_rate)))
 
-        return perf_value + beta * energy_value
+        return perf_value, energy_value
     
-    @classmethod
-    def compute_values(cls, params, beta, truncation):
+
+    def compute_values(self, params,  truncation):
         
-        SmallCell.values[('idl', 0)] = 0
+        self.values[('idl', 0)] = 0
 
         state                        = ('stp', 0)
-        SmallCell.values[('stp', 0)] = cls.state_value(params, state, beta, truncation)
+        self.values[('stp', 0)] = SmallCell.state_value(params, state,  truncation)
 
         for energy_state in ('stp', 'bsy'):
             for num_jobs in range(1, truncation + 1):
                 state = (energy_state, num_jobs)
 
-                SmallCell.values[state] = cls.state_value(params, state, beta, truncation)
+                self.values[state] = SmallCell.state_value(params, state, truncation)
 
 
     
@@ -183,16 +185,18 @@ if __name__ == '__main__':
 
 
 
-    cell2.compute_values(small, 0.1, 5)
+    cell2.compute_values(small, 5)
 
     from pprint import pprint
 
     pprint(cell2.values)
 
-    cell.values([cell2.arr_rate], 10)
-    v = cell.load_values([cell2.arr_rate])
+    cell.compute_values([cell2.arr_rate], 10)
+    cell.load_values([cell2.arr_rate])
+    
+    pprint(cell.values)
 
-    pprint(v)
+   
 
     # j     = Job(11, 0)
     # j2    = Job(14, 1)

@@ -66,7 +66,7 @@ values = (#->{(valueFunction[states[[#]]]/.perfCoeffs), energyValue[states[[#]],
 keys=pythonTuples[states];
 values = (keys[[#]]->{valueFunction[states[[#]]]/.perfCoeffs, energyValue[states[[#]], energyCoeffs]})&/@Range[Length[states]];
 
-loads=N[arrRates/servRates];
+loads=Round[N[arrRates/servRates], 0.001];
 loads = StringJoin["-"<>ToString[#]&/@loads];
 filename = "/Users/misikir/Google\ Drive/EIT-Project/code/json/state_values_load"<>loads<>".json";
 Export[filename,values]
@@ -76,6 +76,8 @@ Export[filename,values]
 
 (*arrRates=ToExpression[$ScriptCommandLine[[2]]];
 servRates=ToExpression[$ScriptCommandLine[[3]]]*)
+
+
 
 params = $ScriptCommandLine
 

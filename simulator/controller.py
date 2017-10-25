@@ -70,7 +70,7 @@ class Controller:
             if event == 'a':
                 
                 j = Job(self.now, ID)
-                self.generators[ID].dispatcher(j, self.sim_time)
+                self.generators[ID].jsq_dispatcher(j, self.sim_time)
 
                 if ID != 0:
                     self.events[(ID, 'i')] = cell.idl_time
@@ -146,4 +146,4 @@ if __name__ == '__main__':
 
     pprint(c.events)
 
-    c.simulate(100000)
+    c.simulate(10000)

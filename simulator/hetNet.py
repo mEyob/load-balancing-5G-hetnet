@@ -6,11 +6,12 @@ import subprocess, os, json
 
 class MacroCell(Cell):
 
-    values = {}
-
     def __init__(self, ID, parameters):
         Cell.__init__(self, ID, parameters)
+        self.avg_serv_time   = [1/serv_rate for serv_rate in parameters.serv_rate]
         self._allowed_states = ('idl', 'bsy')
+        self.values = {}
+
 
     def serv_size(self, origin_id):
         '''
@@ -48,9 +49,7 @@ class MacroCell(Cell):
         arr_rates = [self.arr_rate]
         arr_rates.extend(small_cell_arrivals)
 
-        print(arr_rates)
-
-        load = [round(arr/serv, 3) for arr, serv in zip(arr_rates, self.serv_rate)]
+        load = [round(arr/serv, 3) if round(arr/serv, 3) != 0 else '0.' for arr, serv in zip(arr_rates, self.serv_rate)]
         load = '-'.join(map(str, load))
 
         filename = os.path.join('..','json','state_values_load-' + load + '.json')
@@ -110,8 +109,7 @@ class SmallCell(Cell):
             self.state = 'slp'
             self.idl_time = np.inf
     
-    @staticmethod
-    def state_value(params, state, truncation):
+    def state_value(self, state, truncation, prob):
         '''
         Input:
         -----
@@ -127,8 +125,8 @@ class SmallCell(Cell):
 
         if state == ('idl',0):
             return 0, 0
-        arr_rate, serv_rate, setup_rate, switchoff_rate  = params.arr_rate, params.serv_rate, params.stp_rate, 1/params.switchoff_rate 
-        setup_power, idle_power, busy_power, sleep_power = params.stp_power, params.idl_power, params.bsy_power, params.slp_power
+        arr_rate, serv_rate, setup_rate, switchoff_rate  = prob * self.arr_rate, self.serv_rate, self.stp_rate, 1/self.avg_idl_time 
+        setup_power, idle_power, busy_power, sleep_power = self.stp_power, self.idl_power, self.bsy_power, self.slp_power
         
         denom = switchoff_rate*setup_rate + switchoff_rate*arr_rate + setup_rate*arr_rate
         n     = state[1]
@@ -148,18 +146,18 @@ class SmallCell(Cell):
         return perf_value, energy_value
     
 
-    def compute_values(self, params,  truncation):
+    def compute_values(self,  truncation, prob):
         
-        self.values[('idl', 0)] = 0
+        self.values[('idl', 0)] = 0, 0
 
-        state                        = ('stp', 0)
-        self.values[('stp', 0)] = SmallCell.state_value(params, state,  truncation)
+        state                   = ('slp', 0)
+        self.values[('slp', 0)] = self.state_value(state,  truncation, prob)
 
         for energy_state in ('stp', 'bsy'):
             for num_jobs in range(1, truncation + 1):
                 state = (energy_state, num_jobs)
 
-                self.values[state] = SmallCell.state_value(params, state, truncation)
+                self.values[state] = self.state_value(state, truncation, prob)
 
 
     
@@ -178,14 +176,14 @@ if __name__ == '__main__':
     small_self = namedtuple('small_self', ['arr_rate', 'serv_rate', 'idl_power', 'bsy_power', 'slp_power', 'stp_power', 'stp_rate', 'switchoff_rate'])
 
     macro = macro_self(4, [12.34, 6.37], 700, 1000)
-    small = small_self(9, 18.73, 70, 100, 0, 100, 1, 1000000)
+    small = small_self(9, 18.73, 70, 100, 0, 100, 100, 1000000)
 
     cell  = MacroCell(0, macro)
     cell2 = SmallCell(1,small)
 
 
 
-    cell2.compute_values(small, 5)
+    cell2.compute_values(5, 1)
 
     from pprint import pprint
 

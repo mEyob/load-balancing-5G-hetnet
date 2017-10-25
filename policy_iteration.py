@@ -397,7 +397,9 @@ if __name__ == '__main__':
     
     data_dir = os.path.dirname(os.getcwd())
     file = os.path.join(data_dir, 'data', filename)
-
+    
+    policy_iteration(states, policy, macro, small, trunc, 1)
+    
     with open(file, 'w') as file_handle:
         pol_iter = policy_iteration(states, policy, macro, small, trunc, 0.01, stream=file_handle, fpi=False)
     

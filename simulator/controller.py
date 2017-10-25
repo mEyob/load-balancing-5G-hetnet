@@ -18,6 +18,7 @@ from pprint import pprint
 
 class Controller:
     def __init__(self, macro_params, small_params, K):
+        self.K = K
         self.cells      = [MacroCell(ID, macro_params) if ID == 0 else SmallCell(ID, small_params) for ID in range(K+1)]
         self.generators = [TraffGenerator(self.cells[ID], macro_params.arr_rate) if ID == 0 else TraffGenerator(self.cells[0], small_params.arr_rate, self.cells[ID]) for ID in range(K+1)]
         
@@ -41,19 +42,18 @@ class Controller:
 
         stream.write('\nAverage power consumption: {:10.3f}\n'.format(tot_energy / tot_time))
 
-    def compute_values(self, truncation, homogen=True):
+    def compute_values(self, truncation, prob, homogen=True):
 
-        small_cell_arrivals = [cell.arr_rate for cell in self.cells[1:]]
+        if homogen:
+            small_cell_arrivals = [prob * cell.arr_rate for cell in self.cells[1:]]
 
         self.cells[0].compute_values(small_cell_arrivals, truncation)
         self.cells[0].load_values(small_cell_arrivals)
 
-        if homogen:
-            
 
 
 
-    def simulate(self, dispatcher, max_time, prob=0.5):
+    def simulate(self, dispatcher, max_time, beta, init_policy='lb', homogen=True, truncation=50):
         '''
         A method for controlling the flow of simulation by tracking job arrival, job
         completion in macro and small cells, and idle timer expiration and setup 
@@ -63,7 +63,15 @@ class Controller:
 
         warm_up_time = 0.05 * max_time
 
-        self.compute_values()
+        if init_policy == 'lb' and homogen:
+            # Homogenity assumes the same arrival rates and service rates at all small cells
+
+            nom   = ((self.cells[1].arr_rate/self.cells[1].serv_rate) - (self.cells[0].arr_rate/self.cells[0].serv_rate[0]))
+            denom = (self.cells[1].arr_rate/self.cells[1].serv_rate) + self.cells[1].arr_rate * sum(self.cells[0].avg_serv_time[1:])
+            prob = max(0, nom/denom)
+
+
+        self.compute_values(truncation, prob, homogen)
 
         while self.sim_time < max_time:
         # To simulate specific number of jobs, use => while Job.num_of_jobs < max_jobs:
@@ -83,10 +91,29 @@ class Controller:
                 
                 j = Job(self.now, ID)
 
-                if dispatcher == 'jsq' or ID == 0:
+                if dispatcher == 'jsq':
                     self.generators[ID].jsq_dispatcher(j, self.sim_time)
                 elif dispatcher == 'rnd':
                     self.generators[ID].rnd_dispatcher(j, self.sim_time, prob)
+
+                elif dispatcher == 'fpi':
+
+                    if ID == 0:
+                        self.generators[ID].fpi_dispatcher(j,self.sim_time, 0, 0, beta)
+                    else:
+                        state_macro = []
+
+                        for job_class in range(self.K+1):
+                            state_macro.append(
+                                len(list(filter(lambda j: j.origin == job_class, self.cells[0].queue)))
+                                )
+                        
+                        state_macro = '('+','.join(map(str, tuple(state_macro)))+')'
+                        value_macro = self.cells[0].values[state_macro]
+
+                        state_small       = (cell.state, cell.count()) 
+                        value_small = cell.state_value(state_small, truncation, 1-prob)
+                        self.generators[ID].fpi_dispatcher(j,self.sim_time, value_macro, value_small, beta)
 
 
 
@@ -140,7 +167,10 @@ class Controller:
                 self.sim_time = self.now
      
         Job.write_stats()
+        Job.reset()
         self.write_power_stats(max_time - warm_up_time)
+
+        print([generator.decisions for generator in self.generators])
 
 
 
@@ -154,7 +184,7 @@ if __name__ == '__main__':
     small_params = namedtuple('small_params', ['arr_rate', 'serv_rate', 'idl_power', 'bsy_power', 'slp_power', 'stp_power', 'stp_rate', 'switchoff_rate'])
 
     macro = macro_params(4, [12.34, 6.37], 700, 1000)
-    small = small_params(9, 18.73, 70, 100, 0, 100, 10, 1000000)
+    small = small_params(9, 18.73, 70, 100, 0, 100, 1, 1000000)
 
     # lp = line_profiler.LineProfiler() # initialize a LineProfiler object
     # c = Controller(macro, small, 1)
@@ -166,8 +196,8 @@ if __name__ == '__main__':
 
     # pprint(c.events)
 
-    c.simulate('rnd', 100000)
+    c.simulate('fpi', 10000, 1)
 
     d = Controller(macro, small, 1)
 
-    d.simulate('jsq', 100000)
+    d.simulate('rnd', 10000, 1)

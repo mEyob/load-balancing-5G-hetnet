@@ -14,6 +14,7 @@ class TraffGenerator:
 		self.small_cell = small_cell
 		self.macro_cell = macro_cell  
 		self.arr_rate   = arr_rate
+		self.decisions  = [0, 0]
 
 	def generate(self, now):
 		if self.small_cell != None:
@@ -31,19 +32,33 @@ class TraffGenerator:
 	def rnd_dispatcher(self, job, sim_time, prob):
 
 		if job.origin == 0:
+			self.decisions[0] = self.decisions[0] + 1
 			self.macro_cell.arrival(job, sim_time)
 
 		else:
+
 			u = random.random()
 			if u < prob:
+				self.decisions[0] = self.decisions[0] + 1
 				self.macro_cell.arrival(job, sim_time)
 			else:
+				self.decisions[1] = self.decisions[1] + 1
 				self.small_cell.arrival(job, sim_time)
 
-	def fpi_dispatcher(self, job, sim_time, value_macro, value_small):
+	def fpi_dispatcher(self, job, sim_time, value_macro, value_small, beta):
 
-		if value_macro < value_small:
+		if job.origin == 0:
+			self.decisions[0] = self.decisions[0] + 1
 			self.macro_cell.arrival(job, sim_time)
+
 		else:
-			self.small_cell.arrival(job, sim_time)
+			value_macro = value_macro[0] + beta * value_macro[1]
+			value_small = value_small[0] + beta * value_small[1]
+
+			if value_macro < value_small:
+				self.decisions[0] = self.decisions[0] + 1
+				self.macro_cell.arrival(job, sim_time)
+			else:
+				self.decisions[1] = self.decisions[1] + 1
+				self.small_cell.arrival(job, sim_time)
 

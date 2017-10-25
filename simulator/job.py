@@ -31,12 +31,12 @@ class Job:
         Job.var_resp_time += delta * (resp_time - Job.avg_resp_time)
     
     @classmethod
-    def write_stats(self, stream=None):
+    def write_stats(cls, stream=None):
         if stream == None:
             stream = sys.stdout
-        stream.write('Total jobs: {:25}\n'.format(Job.num_of_jobs))
-        stream.write('\tAverage response time {:11.5f}\n'.format(Job.avg_resp_time))
-        stream.write('\tVariance of response time {:5.5f}\n'.format(Job.var_resp_time / (Job.num_of_jobs - 1)))
+        stream.write('Total jobs: {:25}\n'.format(cls.num_of_jobs))
+        stream.write('\tAverage response time {:11.5f}\n'.format(cls.avg_resp_time))
+        stream.write('\tVariance of response time {:5.5f}\n'.format(cls.var_resp_time / (cls.num_of_jobs - 1)))
 
     def __repr__(self):
         return 'Job(arrival_time={!r}, _remaining_size={!r}, origin={!r})'.format(self._arr_time, self._remaining_size, self.origin)

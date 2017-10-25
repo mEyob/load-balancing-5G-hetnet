@@ -2,7 +2,10 @@
 class TraffGenerator:
 	'''
 	A traffic generator class to be 'attached' to a 
-	macro or small cell.
+	macro or small cell. If the cell to which the generator
+	object is attched to is a small cell, the dispatcher 
+	methods make job dispatching decisions between the small
+	and macro cells.
 	'''
 
 	def __init__(self, macro_cell, arr_rate, small_cell=None):
@@ -16,7 +19,7 @@ class TraffGenerator:
 		else: 
 			return now + self.macro_cell.generate_interval(self.arr_rate)
 
-	def dispatcher(self, job, sim_time):
+	def jsq_dispatcher(self, job, sim_time):
 		if job.origin !=0 and self.small_cell.count() <= self.macro_cell.count():
 			self.small_cell.arrival(job, sim_time)
 

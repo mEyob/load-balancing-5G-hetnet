@@ -13,6 +13,7 @@ class Cell:
     def __init__(self, ID, parameters):
         self.ID        = ID
         self.serv_rate = parameters.serv_rate
+        self.arr_rate  = parameters.arr_rate # could be a single number or a list
 
         self.idl_power = parameters.idl_power
         self.bsy_power = parameters.bsy_power

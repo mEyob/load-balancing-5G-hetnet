@@ -34,9 +34,13 @@ class Job:
     def write_stats(cls, stream=None):
         if stream == None:
             stream = sys.stdout
-        stream.write('\nTotal jobs: {:25}\n'.format(cls.num_of_jobs))
-        stream.write('\tAverage response time {:11.5f}\n'.format(cls.avg_resp_time))
-        stream.write('\tVariance of response time {:5.5f}\n'.format(cls.var_resp_time / (cls.num_of_jobs - 1)))
+        # stream.write('\nTotal jobs: {:25}\n'.format(cls.num_of_jobs))
+        # stream.write('\tAverage response time {:11.5f}\n'.format(cls.avg_resp_time))
+        # stream.write('\tVariance of response time {:5.5f}\n'.format(cls.var_resp_time / (cls.num_of_jobs - 1)))
+
+        stream.write(str(cls.num_of_jobs) + ',')
+        stream.write(str(cls.avg_resp_time) + ',')
+        stream.write(str(cls.var_resp_time / (cls.num_of_jobs - 1)) + ',')
 
     @classmethod 
     def reset(cls):

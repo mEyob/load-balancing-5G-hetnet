@@ -11,13 +11,23 @@ from job import Job
 
 import sys
 from collections import namedtuple
+from datetime import datetime
 import numpy as np
 
 
 from pprint import pprint
 
+ERROR_PCT = 10e-1
+
+MAX_ITERATIONS = 50
+
+macro_params = namedtuple('macro_params',['arr_rate', 'serv_rate', 'idl_power', 'bsy_power'])
+small_params = namedtuple('small_params', ['arr_rate', 'serv_rate', 'idl_power', 'bsy_power', 'slp_power', 'stp_power', 'stp_rate', 'switchoff_rate'])
+
+
 class Controller:
     def __init__(self, macro_params, small_params, K):
+        self.K = K
         self.cells      = [MacroCell(ID, macro_params) if ID == 0 else SmallCell(ID, small_params) for ID in range(K+1)]
         self.generators = [TraffGenerator(self.cells[ID], macro_params.arr_rate) if ID == 0 else TraffGenerator(self.cells[0], small_params.arr_rate, self.cells[ID]) for ID in range(K+1)]
         
@@ -32,24 +42,47 @@ class Controller:
             self.events[(ID, 'i')] = np.inf
             self.events[(ID, 's')] = np.inf
 
-    def write_power_stats(self, tot_time, stream=None):
+    def write_stats(self, stat, stream=None):
 
         if stream == None:
             stream = sys.stdout
 
-        tot_energy = sum([cell.total_energy for cell in self.cells])
+        stream.write('{:.3f}\n'.format(stat))
 
-        stream.write('\nAverage power consumption: {:10.3f}\n'.format(tot_energy / tot_time))
+    def reset(self):
+        self.cells =      []
+        self.generators = []
+        self.events   =   {}
+        self.sim_time =   0
+        self.now      =   0
+
+    
 
 
-
-    def simulate(self, max_time):
+    def simulate(self, dispatcher, max_time, beta, lb=True, homogen=True, truncation=50, direct_call=True):
         '''
         A method for controlling the flow of simulation by tracking job arrival, job
         completion in macro and small cells, and idle timer expiration and setup 
         completion in small cells. These events are read and written into the 'events'
         attribute (which is a dictionary) of the 'Controller' class.
         '''
+
+        # if direct_call:
+        #     if init_policy == 'lb' and homogen:
+        #     # Homogenity assumes the same arrival rates and service rates at all small cells
+
+        #         nom   = ((self.cells[1].arr_rate/self.cells[1].serv_rate) - (self.cells[0].arr_rate/self.cells[0].serv_rate[0]))
+        #         denom = (self.cells[1].arr_rate/self.cells[1].serv_rate) + self.cells[1].arr_rate * sum(self.cells[0].avg_serv_time[1:])
+        #         prob = max(0, nom/denom)
+
+        if lb:
+            nom   = ((self.cells[1].arr_rate/self.cells[1].serv_rate) - (self.cells[0].arr_rate/self.cells[0].serv_rate[0]))
+            denom = (self.cells[1].arr_rate/self.cells[1].serv_rate) + self.cells[1].arr_rate * sum(self.cells[0].avg_serv_time[1:])
+            prob = max(0, nom/denom)
+
+        small_arrivals = [prob * cell.arr_rate for cell in self.cells[1:]]
+        self.cells[0].load_value_coefficients(small_arrivals)
+
 
         warm_up_time = 0.05 * max_time
 
@@ -70,7 +103,25 @@ class Controller:
             if event == 'a':
                 
                 j = Job(self.now, ID)
-                self.generators[ID].jsq_dispatcher(j, self.sim_time)
+
+                if dispatcher == 'jsq':
+                    self.generators[ID].jsq_dispatcher(j, self.sim_time)
+                elif dispatcher == 'rnd':
+                    self.generators[ID].rnd_dispatcher(j, self.sim_time, prob)
+
+                elif dispatcher == 'fpi':
+
+                    if ID == 0:
+                        self.generators[ID].fpi_dispatcher(j,self.sim_time, 0, 0, beta)
+                    else:
+                        value_macro = self.cells[0].state_value()
+ 
+                        value_small = cell.state_value(1-prob)
+                        self.generators[ID].fpi_dispatcher(j,self.sim_time, value_macro, value_small, beta)
+
+
+
+                    #self.generators[ID].fpi_dispatcher()
 
                 if ID != 0:
                     self.events[(ID, 'i')] = cell.idl_time
@@ -118,9 +169,121 @@ class Controller:
                 self.events[(ID, 's')] = cell.stp_time
 
                 self.sim_time = self.now
+
+
      
         Job.write_stats()
-        self.write_power_stats(max_time - warm_up_time)
+
+        avg_resp_time = Job.avg_resp_time
+        tot_energy    = sum([cell.total_energy for cell in self.cells])
+        avg_power     = tot_energy / (max_time - warm_up_time)
+        self.write_stats(avg_power)
+
+        print([generator.decisions for generator in self.generators])
+
+        Job.reset()
+        self.reset()
+
+        return avg_resp_time, avg_power
+
+
+
+def beta_optimization(dispatcher, max_time, K,delay_constraint=None, learning_rate=1, init_policy='lb', homogen=True, truncation=50, output=None):
+
+    controller = Controller(macro, small, K)
+
+    if output == None:
+        output = sys.stdout
+
+    if init_policy == 'lb' and homogen:
+        # Homogenity assumes the same arrival rates and service rates at all small cells
+
+        nom   = ((controller.cells[1].arr_rate/controller.cells[1].serv_rate) - (controller.cells[0].arr_rate/controller.cells[0].serv_rate[0]))
+        denom = (controller.cells[1].arr_rate/controller.cells[1].serv_rate) + controller.cells[1].arr_rate * sum(controller.cells[0].avg_serv_time[1:])
+        prob = max(0, nom/denom)
+
+        print(prob)
+
+
+    
+
+    if delay_constraint == None:
+        macro_load_rnd        = controller.cells[0].arr_rate/controller.cells[0].serv_rate[0] + sum([prob * controller.cells[i].arr_rate/controller.cells[0].serv_rate[i] for i in range(controller.K+1)])
+        macro_avg_resp_time   = (macro_load_rnd / (1 - macro_load_rnd)) / sum([cell.arr_rate if cell.ID == 0 else prob * cell.arr_rate for cell in controller.cells])
+        small_avg_resp_time   = 1/(controller.cells[1].serv_rate - (1-prob)*controller.cells[1].arr_rate)
+
+        avg_resp_time_init    = (prob * macro_avg_resp_time + (1-prob) * small_avg_resp_time)
+
+        delay_constraint = 1.25 * avg_resp_time_init
+    
+    error_pct, avg_resp_time          = np.inf, np.inf
+    iter_cnt, beta, opt_beta, stable_count      = 0, 0, 0, 0
+    
+
+    while error_pct > ERROR_PCT:
+
+        controller = Controller(macro, small, K)        
+        if iter_cnt == 0:
+            #outputfile = open(output, 'a')
+            output.write('beta,macro_arrival,small_arrival,avg_idle_time,num_of_jobs,avg_resp_time,avg_power\n')
+            #outputfile.close()
+
+        elif iter_cnt > MAX_ITERATIONS:
+            # If mean response time cannot get close enough
+            # to the delay_constraint within MAX_ITERATIONS, 
+            # return the last beta value that is 
+            # known to satisfy the constraint.
+
+            message = "\n{}\tBeta value failed to converge in {} iterations\n"
+            
+            with open('log.log', 'a') as logfile:
+                logfile.write(message.format(datetime.now().strftime('%y/%m/%d %H:%M:%S'), MAX_ITERATIONS))
+
+            return opt_beta
+
+        controller.simulate(
+                    dispatcher, 
+                    max_time, 
+                    beta, 
+                    prob,
+                    direct_call=False
+                    )
+
+        
+        output.write(str(beta) + ',' + 
+            str(controller.cells[0].arr_rate) + ',' +
+            str(controller.cells[1].arr_rate) + ',' + 
+            str(controller.cells[1].avg_idl_time) + ',' +
+            str(Job.num_of_jobs) + ',' +
+            str(Job.avg_resp_time) + ','
+            )
+
+        controller.write_power_stats(max_time - 0.05 * max_time)
+
+        print([generator.decisions for generator in controller.generators])
+        avg_resp_time = Job.avg_resp_time
+
+       
+
+
+        error         = delay_constraint - avg_resp_time
+        error_pct     = 100 * np.abs(error) / delay_constraint 
+
+        if beta == 0 and error < 0:
+            with open('log.log', 'a') as logfile:
+                logfile.write('\n{}: Response time constraint cannot be met\n'.format(datetime.now().timestamp()))
+                logfile.write('Constraint: E[T] <= {}\nBest case scenario (beta=0): E[T] = {}\n'.format(delay_constraint, avg_resp_time))
+                break 
+
+        iter_cnt += 1
+        beta = beta + learning_rate *(1 /iter_cnt) * error
+
+        Job.reset()        
+
+    else:
+        with open('log.log', 'a') as logfile:
+            logfile.write("{}\tExecution completed normally: \n\tResponse time within specified error margin of constraint\n".format(datetime.now().timestamp()))
+
 
 
 
@@ -130,11 +293,9 @@ if __name__ == '__main__':
 
     import line_profiler
 
-    macro_params = namedtuple('macro_params',['arr_rate', 'serv_rate', 'idl_power', 'bsy_power'])
-    small_params = namedtuple('small_params', ['arr_rate', 'serv_rate', 'idl_power', 'bsy_power', 'slp_power', 'stp_power', 'stp_rate', 'switchoff_rate'])
 
-    macro = macro_params(4, [12.34, 6.37], 700, 1000)
-    small = small_params(9, 18.73, 70, 100, 0, 100, 10, 1000000)
+    macro = macro_params(2, [12.34, 6.37, 6.37], 700, 1000)
+    small = small_params(9, 18.73, 70, 100, 0, 100, 100, 1000000)
 
     # lp = line_profiler.LineProfiler() # initialize a LineProfiler object
     # c = Controller(macro, small, 1)
@@ -142,8 +303,12 @@ if __name__ == '__main__':
     # prof(10000)
 
     # lp.print_stats()
-    c = Controller(macro, small, 1)
+    # c = Controller(macro, small, 1)
 
-    pprint(c.events)
+    # pprint(c.events)
 
-    c.simulate(10000)
+    # beta_optimization('fpi', 10000, 2, truncation=50)
+
+    d = Controller(macro, small, 2)
+
+    d.simulate('fpi', 100000, 0.1)

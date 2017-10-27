@@ -18,7 +18,7 @@ macro_params = namedtuple('macro_params',['arr_rate', 'serv_rates', 'idle_power'
 small_params = namedtuple('small_params', ['arr_rate', 'serv_rate', 'idle_power', 'busy_power', 'sleep_power', 'setup_power', 'setup_rate', 'switchoff_rate'])
 
 macro = macro_params(4, [12.34, 6.37], 700, 1000)
-small = small_params(9, 18.73, 70, 100, 0, 100, 1, 1000000)
+small = small_params(6, 18.73, 70, 100, 0, 100, 1, 1000000)
 
 # macro = macro_params(0, [1, 1], 120, 200)
 # small = small_params(1, 1, 120, 200, 10, 200, 0.1, 1000000000)
@@ -316,8 +316,7 @@ def policy_iteration(state_space, initial_policy, macro_params, small_params, tr
     ))
     
     if verbose:
-        with open(stream, 'a') as f:
-            print_stats(print_dict, f, header)
+        print_stats(print_dict, stdout, header)
     
     while True:
         
@@ -367,8 +366,7 @@ def policy_iteration(state_space, initial_policy, macro_params, small_params, tr
         ))
         
         if verbose:
-            with open(stream, 'a') as f:
-                print_stats(print_dict, f)
+            print_stats(print_dict, stdout)
 
 
     result = {
@@ -384,7 +382,7 @@ if __name__ == '__main__':
     import line_profiler
     import os
     
-    trunc = 20
+    trunc = 15
     states = state_space_gen(trunc)
     prob = max(0.0,((small.arr_rate/small.serv_rate) - (macro.arr_rate/macro.serv_rates[0]))/((small.arr_rate/small.serv_rate) + (small.arr_rate/macro.serv_rates[1])))
     prob = np.array([prob, 1-prob])
@@ -397,7 +395,9 @@ if __name__ == '__main__':
     
     data_dir = os.path.dirname(os.getcwd())
     file = os.path.join(data_dir, 'data', filename)
-
+    
+    policy_iteration(states, policy, macro, small, trunc, 1, fpi=False, verbose=True)
+    
     with open(file, 'w') as file_handle:
         pol_iter = policy_iteration(states, policy, macro, small, trunc, 0.01, stream=file_handle, fpi=False)
     

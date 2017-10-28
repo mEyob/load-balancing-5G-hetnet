@@ -49,3 +49,25 @@ Best case scenario (beta=0): E[T] = 0.12323539126163059
 1509014781.260811: Response time constraint cannot be met
 Constraint: E[T] <= 0.10964416202004182
 Best case scenario (beta=0): E[T] = 0.12236795691665404
+
+17/10/28 13:43:57	Beta value failed to converge in 10 iterations
+
+17/10/28 13:50:16	Beta value failed to converge in 10 iterations
+
+17/10/28 13:52:36	Beta value failed to converge in 10 iterations
+
+17/10/28 17:07:18	Beta value failed to converge in 10 iterations
+
+17/10/28 17:17:54	Beta value failed to converge in 10 iterations
+
+17/10/28 17:21:31	Beta value failed to converge in 10 iterations
+
+17/10/28 17:26:36	Beta value failed to converge in 10 iterations
+
+17/10/28 19:40:17	Beta value failed to converge in 10 iterations
+
+17/10/28 19:41:11	Beta value failed to converge in 10 iterations
+
+17/10/28 19:47:29	Beta value failed to converge in 10 iterations
+
+17/10/28 19:59:10	Beta value failed to converge in 10 iterations

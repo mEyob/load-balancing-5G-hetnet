@@ -70,8 +70,6 @@ class Cell:
 
         self.attained_service(now, sim_time)
 
-        #print(self.queue[0]._remaining_size)
-
         if not warm_up:
             self.queue[0].stats(now)
 

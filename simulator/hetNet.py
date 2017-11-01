@@ -9,6 +9,7 @@ class MacroCell(Cell):
 
     def __init__(self, ID, parameters):
         Cell.__init__(self, ID, parameters)
+        self.classes = len(parameters.serv_rate)
         self.avg_serv_time   = [1/serv_rate for serv_rate in parameters.serv_rate]
         self._allowed_states = ('idl', 'bsy')
         self.coeffs = {}
@@ -33,28 +34,29 @@ class MacroCell(Cell):
                 self.state = 'idl'
         
 
-    def load_value_coefficients(self, small_cell_arrivals):
+    def load_value_coefficients(self, small_cell_arrivals, compute_coeffs):
         '''
         A method to calculate linear nad quadratic coefficients of state value functions 
         for both performance and energy costs.
         '''
-
         arr_rates = [self.arr_rate]
         arr_rates.extend(small_cell_arrivals)
 
-        rates = copy(arr_rates)
+        if compute_coeffs:
 
-        rates.extend(self.serv_rate)
+            rates = copy(arr_rates)
 
-        message = "Something wrong, two sets of arrival and service rates needed! len(rates) = {} cannot be odd".format(len(rates))
-        assert len(rates) % 2 == 0, message
+            rates.extend(self.serv_rate)
+
+            message = "Something wrong, two sets of arrival and service rates needed! len(rates) = {} cannot be odd".format(len(rates))
+            assert len(rates) % 2 == 0, message
 
 
-        rates = ' '.join(map(str, rates))
+            rates = ' '.join(map(str, rates))
 
-        inputs = ' '.join([rates, str(self.idl_power), str(self.bsy_power)])
+            inputs = ' '.join([rates, str(self.idl_power), str(self.bsy_power)])
 
-        subprocess.run('../macro-cell-value-coefficients.m ' + inputs, shell=True, env=dict(os.environ, PATH='/Applications/Mathematica.app/Contents/MacOS'))
+            subprocess.run('../macro-cell-value-coefficients.m ' + inputs, shell=True, env=dict(os.environ, PATH='/Applications/Mathematica.app/Contents/MacOS'))
 
 
 
@@ -62,9 +64,13 @@ class MacroCell(Cell):
         load = '-'.join(map(str, load))
 
         filename = os.path.join('.','json','coeffs_load-' + load + '.json')
-
-        with open(filename, 'r') as value_data:
-            coeffs = json.load(value_data)
+        
+        try:
+            with open(filename, 'r') as value_data:
+                coeffs = json.load(value_data)
+        except:
+            print("File missing. Coefficient values need to be computed")
+            return
 
         self.coeffs = coeffs
 
@@ -81,30 +87,22 @@ class MacroCell(Cell):
                 self.perf_coeffs[j,i] = coeffs['perfCoeffs'][idx]
         
 
-    def state_value(self):
+    def state_value(self, macro_jobs, beta):
 
-        if self.count() == 0:
-            return 0, 0
-
-        user_classes = len(self.serv_rate)
-        macro_jobs  = np.zeros([user_classes])
-
-        for job_class in range(user_classes):
-                macro_jobs[job_class] = len(list(filter(lambda j: j.origin == job_class, self.queue)))
+        if np.sum(macro_jobs) == 0:
+            return 0
 
         perf_value   = macro_jobs.dot(self.perf_coeffs.dot(macro_jobs)) + np.dot(np.diag(self.perf_coeffs), macro_jobs)
         energy_value = np.sum(np.dot(np.diag(self.energy_coeffs), macro_jobs))
 
-
-
-        return perf_value, energy_value
+        return perf_value + (beta * energy_value)
 
 
     
 
     def __repr__(self):
 
-        return 'This is a macro cell: \n\t {!r}'.format(self.__dict__)
+        return 'Macro(Classes={!r}, Avg. service times={!r})'.format(self.classes, self.avg_serv_time)
 
 
 
@@ -151,48 +149,45 @@ class SmallCell(Cell):
             self.state = 'slp'
             self.idl_time = np.inf
     
-    def state_value(self, prob):
-        '''
-        Input:
-        -----
-        'params'
-        'state': A state whose value needs to be determined.
-        'prob': randomization probability of initial policy
-        Output
-        ------
-        'value': performance and energy values of of the state, i.e. quantifiers of 
-        the relative goodness of the state
-        '''
+    def marginal_value(self, prob, beta):
 
-        state = (self.state, self.count())
+        arr_rate, serv_time, setup_time, idle_time  = prob * self.arr_rate, 1/self.serv_rate, 1/self.stp_rate, self.avg_idl_time 
+        stp_power, idl_power, bsy_power, slp_power  = self.stp_power, self.idl_power, self.bsy_power, self.slp_power
 
-
-        if state == ('idl',0):
-            return 0, 0
-        arr_rate, serv_rate, setup_rate, switchoff_rate  = prob * self.arr_rate, self.serv_rate, self.stp_rate, 1/self.avg_idl_time 
-        setup_power, idle_power, busy_power, sleep_power = self.stp_power, self.idl_power, self.bsy_power, self.slp_power
+        load = arr_rate * serv_time
         
-        denom = switchoff_rate*setup_rate + switchoff_rate*arr_rate + setup_rate*arr_rate
-        n     = state[1]
+        denom = 1 + arr_rate * setup_time + arr_rate * idle_time
 
-        if state == ('stp',0):
-            perf_value   = arr_rate*(setup_rate + arr_rate)/(setup_rate*denom) + (arr_rate**2 * (setup_rate+arr_rate)/(setup_rate*denom*(serv_rate-arr_rate)))
-            energy_value = (setup_power - idle_power)/(switchoff_rate+setup_rate) + setup_rate*((switchoff_rate+setup_rate)*sleep_power - (setup_power + setup_rate*idle_power))/((setup_rate + switchoff_rate)*denom)
-            return perf_value, energy_value
-        
-        perf_value   = n * (n + 1)/(2 * (serv_rate - arr_rate)) - (n * arr_rate/(setup_rate*(serv_rate - arr_rate)))*(switchoff_rate*setup_rate + switchoff_rate*arr_rate)/denom
-        energy_value = (n/serv_rate) * (busy_power - (switchoff_rate*setup_rate*sleep_power + switchoff_rate*arr_rate*setup_power + arr_rate*setup_rate*idle_power)/denom)
-        
-        if state[0] == 'stp':
-            energy_value = energy_value + (arr_rate*(setup_power - idle_power) + switchoff_rate*(setup_power - sleep_power))/denom
-            perf_value   = n * (n + 1)/(2 * (serv_rate - arr_rate)) + (n/setup_rate) + (arr_rate**2 * (serv_rate + n*setup_rate)/(setup_rate*denom*(serv_rate-arr_rate)))
+        n     = self.count()
+        state = self.state
 
-        return perf_value, energy_value
+        if state == 'idl' or state == 'bsy':
+
+            marginal_perf_value   = (serv_time * (n + 1)/(1-load)) - (setup_time * load * (1 + arr_rate * setup_time))/((1-load) * denom)
+            marginal_energy_value = (serv_time * ((bsy_power - slp_power) + arr_rate * setup_time * (bsy_power - stp_power))/denom) + \
+                                    serv_time * arr_rate * idle_time * (bsy_power - idl_power)/denom
+
+        elif state == 'slp':
+
+            marginal_perf_value   = serv_time/(1-load) + (setup_time * (1 + arr_rate * setup_time))/denom
+            marginal_energy_value = (serv_time * ((bsy_power - slp_power) + arr_rate * setup_time * (bsy_power - stp_power))/denom) + \
+                                    (serv_time * arr_rate * idle_time * (bsy_power - idl_power)/denom) + \
+                                    setup_time * ((stp_power - slp_power) + idle_time * (idl_power - slp_power))/denom
+
+
+        elif state == 'stp':
+
+            marginal_perf_value   = (serv_time * (n + 1)/(1-load)) + ((setup_time * (1 + arr_rate * setup_time))/denom) + (idle_time * arr_rate * setup_time)/((1-load) * denom)
+            marginal_energy_value = (serv_time * ((bsy_power - slp_power) + arr_rate * setup_time * (bsy_power - stp_power))/denom) + \
+                                    serv_time * arr_rate * idle_time * (bsy_power - idl_power)/denom
+
+
+        return marginal_perf_value + beta * marginal_energy_value
 
     
     def __repr__(self):
        
-        return 'This is a small cell: \n\t {!r}'.format(self.__dict__)
+        return 'SmallCell(E[S]={!r}, E[SetDelay]={!r}, E[I]={!r})'.format(1/self.serv_rate, 1/self.stp_rate, self.avg_idl_time)
         
     
 
@@ -204,11 +199,11 @@ if __name__ == '__main__':
     macro_self = namedtuple('macro_self',['arr_rate', 'serv_rate', 'idl_power', 'bsy_power'])
     small_self = namedtuple('small_self', ['arr_rate', 'serv_rate', 'idl_power', 'bsy_power', 'slp_power', 'stp_power', 'stp_rate', 'switchoff_rate'])
 
-    # macro = macro_self(4, [12.34, 6.37], 700, 1000)
-    # small = small_self(9, 18.73, 70, 100, 0, 100, 100, 1000000)
+    macro = macro_self(1, [12.34, 6.37], 700, 1000)
+    small = small_self(2, 18.73, 70, 100, 0, 100, 100, 1000000)
 
-    macro = macro_self(0.1, [1, 2], 700, 1000)
-    small = small_self(0.9, 18.73, 70, 100, 0, 100, 100, 1000000)
+    # macro = macro_self(0.1, [1, 2], 700, 1000)
+    # small = small_self(0.9, 18.73, 70, 100, 0, 100, 100, 1000000)
 
     cell  = MacroCell(0, macro)
     cell2 = SmallCell(1,small)
@@ -216,7 +211,7 @@ if __name__ == '__main__':
 
     from pprint import pprint
 
-    cell.load_value_coefficients([cell2.arr_rate])
+    cell.load_value_coefficients([cell2.arr_rate], True)
     
     pprint(cell.coeffs)
 
@@ -232,8 +227,12 @@ if __name__ == '__main__':
     cell.queue.append(Job(2, 0))
     cell.queue.append(Job(3, 1))
 
+    for i, j in zip(range(5), range(5)):
+        print((i,j), cell.state_value(np.array([i,j]), 0.1))
 
-    print(cell.state_value())
+    print(cell)
+    print(cell2)
+    # print(cell.state_value())
 
    
 

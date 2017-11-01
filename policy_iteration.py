@@ -18,7 +18,7 @@ macro_params = namedtuple('macro_params',['arr_rate', 'serv_rates', 'idle_power'
 small_params = namedtuple('small_params', ['arr_rate', 'serv_rate', 'idle_power', 'busy_power', 'sleep_power', 'setup_power', 'setup_rate', 'switchoff_rate'])
 
 macro = macro_params(4, [12.34, 6.37], 700, 1000)
-small = small_params(6, 18.73, 70, 100, 0, 100, 1, 1000000)
+small = small_params(9, 18.73, 70, 100, 0, 100, 1, 1000000)
 
 # macro = macro_params(0, [1, 1], 120, 200)
 # small = small_params(1, 1, 120, 200, 10, 200, 0.1, 1000000000)
@@ -327,21 +327,21 @@ def policy_iteration(state_space, initial_policy, macro_params, small_params, tr
             old = copy.copy(policy[cur_index])
             value_diff_macro, value_diff_small = np.inf, np.inf
 
-            if fpi:
+            # if fpi:
 
-                if state[2] < truncation:
-                    value_diff_macro = macro_values["("+str(state[1])+","+str(state[2]+1)+")"] - macro_values["("+str(state[1])+","+str(state[2])+")"]
-                if state[4] < truncation:
-                    value_diff_small = value_small_symbolic((state[3],state[4]+1), small_params, beta) - value_small_symbolic((state[3],state[4]), small_params, beta) 
-            else:
-                cur_state_value = policy_eval['perf_values'][cur_index] + beta * policy_eval['energy_values'][cur_index]
-                
-                if state[2] < truncation:
-                    next_macro       = state_space.index((1, state[1], state[2] + 1, state[3], state[4]))
-                    value_diff_macro = policy_eval['perf_values'][next_macro] + beta * policy_eval['energy_values'][next_macro] - cur_state_value
-                if state[4] < truncation:
-                    next_small       = state_space.index((1, state[1], state[2], state[3], state[4] + 1))
-                    value_diff_small = policy_eval['perf_values'][next_small] + beta * policy_eval['energy_values'][next_small] - cur_state_value
+            #     if state[2] < truncation:
+            #         value_diff_macro = macro_values["("+str(state[1])+","+str(state[2]+1)+")"] - macro_values["("+str(state[1])+","+str(state[2])+")"]
+            #     if state[4] < truncation:
+            #         value_diff_small = value_small_symbolic((state[3],state[4]+1), small_params, beta) - value_small_symbolic((state[3],state[4]), small_params, beta) 
+            # else:
+            cur_state_value = policy_eval['perf_values'][cur_index] + beta * policy_eval['energy_values'][cur_index]
+            
+            if state[2] < truncation:
+                next_macro       = state_space.index((1, state[1], state[2] + 1, state[3], state[4]))
+                value_diff_macro = policy_eval['perf_values'][next_macro] + beta * policy_eval['energy_values'][next_macro] - cur_state_value
+            if state[4] < truncation:
+                next_small       = state_space.index((1, state[1], state[2], state[3], state[4] + 1))
+                value_diff_small = policy_eval['perf_values'][next_small] + beta * policy_eval['energy_values'][next_small] - cur_state_value
 
             if value_diff_macro < value_diff_small:
                 policy[cur_index] = (1, 0)
@@ -351,8 +351,7 @@ def policy_iteration(state_space, initial_policy, macro_params, small_params, tr
             if list(old) != list(policy[cur_index]):
                 policy_stable = False
 
-        if policy_stable or fpi:
-            break
+        
                     
         iter_count += 1        
         transition_rate = trans_rate_matrix(state_space, policy, macro_params, small_params, truncation)      
@@ -364,9 +363,21 @@ def policy_iteration(state_space, initial_policy, macro_params, small_params, tr
         ('avg_power'  , policy_eval['avg_energy_reward']),
         ('beta'      , beta)
         ))
+
         
         if verbose:
             print_stats(print_dict, stdout)
+
+        with open('perf-values-test.txt', 'w') as perf, open('energy-values-test.txt', 'w') as ener:
+            for index, state in enumerate(state_space):
+                perf.write(str(state[1]) + ', ' +str(state[2]) + ' : ' + str(policy_eval['perf_values'][index]) + '\n')
+                ener.write(str(state[1]) + ', ' +str(state[2]) + ' : ' + str(policy_eval['energy_values'][index]) + '\n')
+
+
+        if policy_stable or fpi:
+            break
+
+
 
 
     result = {
@@ -382,7 +393,7 @@ if __name__ == '__main__':
     import line_profiler
     import os
     
-    trunc = 15
+    trunc = 20
     states = state_space_gen(trunc)
     prob = max(0.0,((small.arr_rate/small.serv_rate) - (macro.arr_rate/macro.serv_rates[0]))/((small.arr_rate/small.serv_rate) + (small.arr_rate/macro.serv_rates[1])))
     prob = np.array([prob, 1-prob])
@@ -396,10 +407,10 @@ if __name__ == '__main__':
     data_dir = os.path.dirname(os.getcwd())
     file = os.path.join(data_dir, 'data', filename)
     
-    policy_iteration(states, policy, macro, small, trunc, 1, fpi=False, verbose=True)
+    policy_iteration(states, policy, macro, small, trunc, 0, fpi=True, verbose=True)
     
-    with open(file, 'w') as file_handle:
-        pol_iter = policy_iteration(states, policy, macro, small, trunc, 0.01, stream=file_handle, fpi=False)
+    # with open(file, 'w') as file_handle:
+    #     pol_iter = policy_iteration(states, policy, macro, small, trunc, 0.01, stream=file_handle, fpi=False)
     
     # lp = line_profiler.LineProfiler() # initialize a LineProfiler object
     # profile_tx_mat = lp(trans_rate_matrix)

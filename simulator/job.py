@@ -5,6 +5,7 @@ class Job:
     num_of_jobs   = 0
     avg_resp_time = 0
     var_resp_time = 0
+    tot_resp_time = 0
     def __init__(self, arr_time, origin_id):
         self._arr_time       = arr_time
         self._remaining_size = None      # Remaining size will be known only after the job is assigned to a cell 
@@ -14,7 +15,7 @@ class Job:
         self._remaining_size = size
 
     def reduce_size(self, size):
-        self._remaining_size -= size
+        self._remaining_size = max(0, self._remaining_size - size)
 
     def get_size(self):
         return self._remaining_size
@@ -26,8 +27,9 @@ class Job:
         '''
         Job.num_of_jobs   += 1
         resp_time          = now - self._arr_time
+        Job.tot_resp_time += resp_time
         delta              = resp_time - Job.avg_resp_time
-        Job.avg_resp_time += delta / Job.num_of_jobs
+        Job.avg_resp_time += (delta / Job.num_of_jobs)
         Job.var_resp_time += delta * (resp_time - Job.avg_resp_time)
     
     @classmethod
@@ -42,7 +44,7 @@ class Job:
 
         stream.write(',{},'.format(cls.num_of_jobs))
         stream.write('{:.5f},'.format(cls.avg_resp_time))
-        stream.write('{:.5f},'.format(cls.var_resp_time / (cls.num_of_jobs - 1)))
+        stream.write('{:.5f}'.format(cls.var_resp_time / (cls.num_of_jobs - 1)))
 
         if stream != sys.stdout:
             stream.close()
@@ -52,6 +54,7 @@ class Job:
         cls.num_of_jobs   = 0
         cls.avg_resp_time = 0
         cls.var_resp_time = 0
+        cls.tot_resp_time = 0
 
     def __repr__(self):
         return 'Job(arrival_time={!r}, _remaining_size={!r}, origin={!r})'.format(self._arr_time, self._remaining_size, self.origin)

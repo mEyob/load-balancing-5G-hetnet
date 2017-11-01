@@ -42,7 +42,7 @@ class Cell:
         the queued jobs.
         '''
         if self.count() > 0 and self.state == 'bsy':
-            att_service = (now - sim_time)/self.count()
+            att_service = round((now - sim_time)/self.count(), 6)
             for job in self.queue:
                 job.reduce_size(att_service)
 
@@ -54,28 +54,27 @@ class Cell:
 
     def arrival(self, job, sim_time):
 
-        self.event_handler('arr', job._arr_time, sim_time)
+        # self.event_handler('arr', job._arr_time, sim_time)
         
-        self.attained_service(job._arr_time, sim_time)
-
+        # self.attained_service(job._arr_time, sim_time)
 
         size = self.serv_size(job.origin)
         job.set_size(size)
         self.queue.append(job)
+        
 
-        self.queue.sort(key = lambda job: job._remaining_size)
+        self.queue.sort(key = lambda job: job._remaining_size, reverse=True)
         self.job_count += 1
+
+
 
     def departure(self, now, sim_time, warm_up):
 
-        self.attained_service(now, sim_time)
+        job = self.queue.pop()
 
         if not warm_up:
-            self.queue[0].stats(now)
+            job.stats(now)
 
-        self.queue.pop()
-
-        self.event_handler('dep', now, sim_time)
 
 
     def power_stats(self, now, sim_time):

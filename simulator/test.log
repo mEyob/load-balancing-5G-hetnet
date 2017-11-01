@@ -1,0 +1,123 @@
+
+2017-10-29 17:58:14: Response time constraint cannot be met
+Constraint: E[T] <= 0.05871949919784353
+Best case scenario (beta=0): E[T] = 0.1070386610277341
+
+2017-10-29 18:16:19: Response time constraint cannot be met
+Constraint: E[T] <= 0.1665924005437203
+Best case scenario (beta=0): E[T] = 0.17186943652308487
+
+2017-10-29 18:50:26: Response time constraint cannot be met
+Constraint: E[T] <= 0.16383832823137412
+Best case scenario (beta=0): E[T] = 0.1838602548287742
+
+2017-10-29 23:50:37: Response time constraint cannot be met
+Constraint: E[T] <= 0.07089553941903835
+Best case scenario (beta=0): E[T] = 0.13974496328944996
+
+17/10/30 00:23:11	Beta value failed to converge in 10 iterations
+
+17/10/30 00:42:28	Beta value failed to converge in 10 iterations
+
+17/10/30 09:45:46	Beta value failed to converge in 10 iterations
+
+17/10/30 09:47:10	Beta value failed to converge in 10 iterations
+
+17/10/30 09:49:39	Beta value failed to converge in 10 iterations
+
+17/10/30 09:51:49	Beta value failed to converge in 10 iterations
+
+17/10/30 09:56:18	Beta value failed to converge in 10 iterations
+
+2017-10-30 09:57:26: Response time constraint cannot be met
+Constraint: E[T] <= 0.051172057607573984
+Best case scenario (beta=0): E[T] = 0.10810686838967641
+
+17/10/30 15:49:29	Beta value failed to converge in 10 iterations
+2017-10-30 16:01:34	Execution completed normally: 
+	Response time within specified error margin of constraint
+
+17/10/30 16:04:16	Beta value failed to converge in 10 iterations
+
+17/10/30 16:18:42	Beta value failed to converge in 10 iterations
+
+17/10/30 16:37:00	Beta value failed to converge in 10 iterations
+
+2017-10-30 16:42:27: Response time constraint cannot be met
+Constraint: E[T] <= 0.0888164343090602
+Best case scenario (beta=0): E[T] = 0.12511653570571984
+
+2017-10-30 17:02:38: Response time constraint cannot be met
+Constraint: E[T] <= 0.6933626093410398
+Best case scenario (beta=0): E[T] = 0.7406691012398035
+
+17/10/31 00:38:59	Beta value failed to converge in 10 iterations
+
+17/10/31 11:26:51	Beta value failed to converge in 10 iterations
+
+2017-10-31 11:31:36: Response time constraint cannot be met
+Constraint: E[T] <= 0.5412791261322292
+Best case scenario (beta=0): E[T] = 11.725272006625667
+2017-10-31 13:43:34	Execution completed normally: 
+	Response time within specified error margin of constraint
+2017-10-31 13:55:06	Execution completed normally: 
+	Response time within specified error margin of constraint
+
+2017-10-31 14:10:06: Response time constraint cannot be met
+Constraint: E[T] <= 0.7181015864198287
+Best case scenario (beta=0): E[T] = 0.8781546582749832
+
+2017-10-31 14:15:11: Response time constraint cannot be met
+Constraint: E[T] <= 0.8617219037037944
+Best case scenario (beta=0): E[T] = 0.8756262572602872
+
+2017-10-31 14:32:58: Response time constraint cannot be met
+Constraint: E[T] <= 0.8846297420207619
+Best case scenario (beta=0): E[T] = 0.8907021291127883
+
+2017-10-31 14:35:03: Response time constraint cannot be met
+Constraint: E[T] <= 0.16249215637820494
+Best case scenario (beta=0): E[T] = 0.16561449645306117
+
+17/10/31 15:22:30	Beta value failed to converge in 10 iterations
+2017-10-31 17:22:16	Execution completed normally: 
+	Response time within specified error margin of constraint
+
+17/10/31 18:30:15	Beta value failed to converge in 10 iterations
+
+2017-10-31 21:36:10	Execution completed normally: 
+	Response time within specified error margin of constraint
+
+2017-11-01 09:57:33: Response time constraint cannot be met
+Constraint: E[T] <= 0.8759687207103352
+Best case scenario (beta=0): E[T] = 0.9198048005590768
+
+2017-11-01 10:00:50: Response time constraint cannot be met
+Constraint: E[T] <= 0.8759687207103352
+Best case scenario (beta=0): E[T] = 0.8964395106874049
+
+2017-11-01 10:06:43	Execution completed normally: 
+	Response time within specified error margin of constraint
+
+2017-11-01 10:09:10: Response time constraint cannot be met
+Constraint: E[T] <= 0.8759687207103352
+Best case scenario (beta=0): E[T] = 0.8772640648882117
+
+2017-11-01 10:10:04: Response time constraint cannot be met
+Constraint: E[T] <= 0.8759687207103352
+Best case scenario (beta=0): E[T] = 0.903488300198497
+
+2017-11-01 11:06:10	Execution completed normally: 
+	Response time within specified error margin of constraint
+
+2017-11-01 14:25:07	Execution completed normally: 
+	Response time within specified error margin of constraint
+
+2017-11-01 14:27:19	Execution completed normally: 
+	Response time within specified error margin of constraint
+
+2017-11-01 14:28:16	Execution completed normally: 
+	Response time within specified error margin of constraint
+
+2017-11-01 15:05:47	Execution completed normally: 
+	Response time within specified error margin of constraint

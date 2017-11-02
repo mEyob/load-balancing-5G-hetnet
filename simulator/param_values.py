@@ -13,7 +13,7 @@ arg_params = []
 
 for laMac in [2]:
     for laS in [4, 6, 9, 12]:
-        for idle in [0, 1, 2, 10]:
+        for idle in [0, 1, 2, 4, 6, 8, 10]:
             arg_params.append([laMac, laS, setup_delay, idle/laS])
 
 for i, params in enumerate(arg_params):

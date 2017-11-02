@@ -121,3 +121,8 @@ Best case scenario (beta=0): E[T] = 0.903488300198497
 
 2017-11-01 15:05:47	Execution completed normally: 
 	Response time within specified error margin of constraint
+
+2017-11-02 11:56:35	Execution completed normally: 
+	Response time within specified error margin of constraint
+
+2017-11-02 17:54:24	Beta value failed to converge in 10 iterations

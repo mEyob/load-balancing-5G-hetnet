@@ -229,7 +229,7 @@ def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=N
         decisions  = 'dispatch-decisions.txt'
     else:
         log        = output[:-3]+'log'
-        decisions  = output[:-4]+'-dispatch-decisions'+'.txt'
+        decisions  = 'dispatch_decisions_'+output[12:-4]+'.txt'
 
     error_pct, avg_resp_time          = np.inf, np.inf
     iter_cnt, beta, opt_beta, stable_count      = 0, 0, 0, 0
@@ -276,12 +276,12 @@ def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=N
             # return the last beta value that is 
             # known to satisfy the constraint.
 
-            message = "\n{}\tBeta value failed to converge in {} iterations\n"
+            message = "\n{:%Y-%m-%d %H:%M:%S}\tBeta value failed to converge in {} iterations\n"
             
             with open(log, 'a') as logfile:
-                logfile.write(message.format(datetime.now().strftime('%y/%m/%d %H:%M:%S'), MAX_ITERATIONS))
+                logfile.write(message.format(datetime.now(), MAX_ITERATIONS))
 
-            return opt_beta, avg_resp_time, min_avg_power
+            return opt_beta, final_resp_time, min_avg_power
 
         result = controller.simulate(
                     'fpi', 
@@ -300,24 +300,30 @@ def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=N
         if beta == 0 and error < 0:
             min_avg_power = result['energy']
             opt_beta   = beta
+            final_resp_time = avg_resp_time
+
             with open(log, 'a') as logfile:
-                logfile.write('\n{:%Y-%m-%d %H:%M:%S}: Response time constraint cannot be met\n'.format(datetime.now()))
+                logfile.write('\n{:%Y-%m-%d %H:%M:%S}\tResponse time constraint cannot be met\n'.format(datetime.now()))
                 logfile.write('Constraint: E[T] <= {}\nBest case scenario (beta=0): E[T] = {}\n'.format(delay_constraint, avg_resp_time))
                 break 
 
-        iter_cnt += 1
+        
+        if error > 0:
+            opt_beta        = beta
+            min_avg_power   = result['energy']
+            final_resp_time = avg_resp_time
+
+        iter_cnt += 1   
         beta = beta + learning_rate *(1 /iter_cnt) * error
 
-        if error > 0:
-            opt_beta   = beta
-            min_avg_power = result['energy']
+
  
 
     else:
         with open(log, 'a') as logfile:
             logfile.write("\n{:%Y-%m-%d %H:%M:%S}\tExecution completed normally: \n\tResponse time within specified error margin of constraint\n".format(datetime.now()))
 
-    return opt_beta, avg_resp_time, min_avg_power
+    return opt_beta, final_resp_time, min_avg_power
 
 
 
@@ -339,7 +345,7 @@ if __name__ == '__main__':
 
 
     macro = macro_params(2, [12.34, 6.37, 6.37, 6.37, 6.37], 700, 1000)
-    small = small_params(9, 18.73, 70, 100, 0, 100, 1, 1000000)
+    small = small_params(4, 18.73, 70, 100, 0, 100, 1, 100000000)
 
     # macro = macro_params(0, [1, 1], 120, 200)
     # small = small_params(1, 1, 120, 200, 10, 200, 0.1, 100000000)
@@ -354,4 +360,5 @@ if __name__ == '__main__':
     # cont = Controller(macro, small, 1)
     # cont.simulate('fpi', 10000, 0.0)
 
-    beta_optimization(macro, small, 500, 4, output='test.csv')  
+    res=beta_optimization(macro, small, 50000, 4, output='test.csv')  
+    print(res)

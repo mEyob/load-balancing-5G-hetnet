@@ -45,6 +45,8 @@ cont = controller.Controller(macro, small, num_small_cells)
 result = cont.simulate('rnd', max_time, 0, compute_coeffs=False, direct_call=True, output=None)
 delay_const = 0.9 * result['perf']
 
+print(delay_const)
+
 macro = macro_params(macro_arr_rate, [12.34, 6.37, 6.37, 6.37, 6.37], 700, 1000)
 small = small_params(small_arr_rate, 18.73, 70, 100, 0, 100, small_setup_rate, small_switchoff_rate)
 

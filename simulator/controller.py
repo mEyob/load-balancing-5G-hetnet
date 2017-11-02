@@ -288,6 +288,7 @@ def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=N
                     max_time, 
                     beta, 
                     direct_call=False,
+                    compute_coeffs=False,
                     output=output
                     )
 

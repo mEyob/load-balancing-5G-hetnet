@@ -2,6 +2,7 @@
 import random
 import numpy as np
 from datetime import datetime
+import re
 
 class TraffGenerator:
     '''
@@ -112,9 +113,10 @@ class TraffGenerator:
 
     def write_decisions(self, output):
         if output:
-            filename = output[:-4]+'-dispatch-decisions.txt'
+            inputnum = re.findall('_([0-9]+)', output)[0]
+            filename =  'dispatch_decisions/dispatch_decisions_'+inputnum+'.txt'
         else:
-            filename = 'decisions.txt'
+            filename = 'dispatch_decisions/decisions.txt'
 
 
 

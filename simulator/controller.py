@@ -13,13 +13,14 @@ import sys, random
 from collections import namedtuple
 from datetime import datetime
 import numpy as np
+import re
 
 
 from pprint import pprint
 
 ERROR_PCT = 10e-1
 
-MAX_ITERATIONS = 10
+MAX_ITERATIONS = 20
 
 
 class Controller:
@@ -218,7 +219,7 @@ class Controller:
 
 
 
-def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=None, learning_rate=1, init_policy=None, output=None):
+def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=None, learning_rate=1, init_policy=None, output=None, naive_run=True):
 
     controller = Controller(macro_params, small_params, K,init_policy)
 
@@ -229,7 +230,8 @@ def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=N
         decisions  = 'dispatch-decisions.txt'
     else:
         log        = output[:-3]+'log'
-        decisions  = 'dispatch_decisions_'+output[12:-4]+'.txt'
+        inputnum   = re.findall('_([0-9]+)', output)[0]
+        decisions  = 'dispatch_decisions/dispatch_decisions_'+inputnum+'.txt'
 
     error_pct, avg_resp_time          = np.inf, np.inf
     iter_cnt, beta, opt_beta, stable_count      = 0, 0, 0, 0
@@ -268,7 +270,8 @@ def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=N
         delay_constraint = 0.9 * result['perf']
     
 
-    while error_pct > ERROR_PCT:
+    #while error_pct > ERROR_PCT:
+    while iter_cnt < MAX_ITERATIONS:
 
         if iter_cnt > MAX_ITERATIONS:
             # If mean response time cannot get close enough
@@ -297,15 +300,17 @@ def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=N
         error         = delay_constraint - avg_resp_time
         error_pct     = 100 * np.abs(error) / delay_constraint 
 
-        if beta == 0 and error < 0:
-            min_avg_power = result['energy']
-            opt_beta   = beta
-            final_resp_time = avg_resp_time
+        if not naive_run:
 
-            with open(log, 'a') as logfile:
-                logfile.write('\n{:%Y-%m-%d %H:%M:%S}\tResponse time constraint cannot be met\n'.format(datetime.now()))
-                logfile.write('Constraint: E[T] <= {}\nBest case scenario (beta=0): E[T] = {}\n'.format(delay_constraint, avg_resp_time))
-                break 
+            if beta == 0 and error < 0:
+                min_avg_power = result['energy']
+                opt_beta   = beta
+                final_resp_time = avg_resp_time
+
+                with open(log, 'a') as logfile:
+                    logfile.write('\n{:%Y-%m-%d %H:%M:%S}\tResponse time constraint cannot be met\n'.format(datetime.now()))
+                    logfile.write('Constraint: E[T] <= {}\nBest case scenario (beta=0): E[T] = {}\n'.format(delay_constraint, avg_resp_time))
+                    break 
 
         
         if error > 0:
@@ -360,5 +365,5 @@ if __name__ == '__main__':
     # cont = Controller(macro, small, 1)
     # cont.simulate('fpi', 10000, 0.0)
 
-    res=beta_optimization(macro, small, 50000, 4, output='test.csv')  
+    res=beta_optimization(macro, small, 500, 4, output='data/test_12.csv')  
     print(res)

@@ -11,12 +11,12 @@ parser.add_argument("-i","--input", help='Input file name')
 
 args = parser.parse_args()
 
-if args.input:
-    filename = 'inputs/input_'+str(args.input)+'.txt'
-else:
-    filename = 'inputs/input_0.txt'
+#if args.input:
+#    filename = 'inputs/input_'+str(args.input)+'.txt'
+#else:
+#    filename = 'inputs_2/input_0.txt'
 
-with open(filename, 'r') as fhandle:
+with open(args.input, 'r') as fhandle:
     inputs = fhandle.read()
 
 inputs = inputs.split(' ')
@@ -43,7 +43,7 @@ cont = controller.Controller(macro, small, num_small_cells)
 
 
 result = cont.simulate('rnd', max_time, 0, compute_coeffs=False, direct_call=True, output=None)
-delay_const = 0.9 * result['perf']
+delay_const = 0.85 * result['perf']
 
 #print(delay_const)
 
@@ -61,7 +61,7 @@ result = controller.beta_optimization(
     delay_constraint=delay_const, 
     learning_rate=1, 
     init_policy=None, 
-    output='data/all_runs_'+str(args.input))
+    output='data/output_'+str(args.input)+'.csv')
 
 #beta,macro_arrival,small_arrival,avg_idle_time,avg_setup_time,num_of_jobs,avg_resp_time,var_resp_time,avg_power
 

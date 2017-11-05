@@ -6,4 +6,4 @@
 #SBATCH --array=0-31
 
 
-srun automated-runs.py --input inputs_2/input_$SLURM_ARRAY_TASK_ID
+srun automated-runs.py --input $SLURM_ARRAY_TASK_ID

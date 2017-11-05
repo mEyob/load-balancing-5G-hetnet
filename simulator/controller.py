@@ -231,7 +231,7 @@ def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=N
     else:
         log        = output[:-3]+'log'
         inputnum   = re.findall('_([0-9]+)', output)[0]
-        decisions  = 'dispatch_decisions/dispatch_decisions_'+inputnum+'.txt'
+        decisions  = 'dispatch_decisions_'+inputnum+'.txt'
 
     error_pct, avg_resp_time          = np.inf, np.inf
     iter_cnt, beta, opt_beta, stable_count      = 0, 0, 0, 0

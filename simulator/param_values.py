@@ -16,9 +16,11 @@ for laMac in [2]:
         for idle in [0, 1, 2, 4, 8, 128, 512, 1024]:
             arg_params.append([laMac, laS, setup_delay, idle/laS])
 
+arg_params.extend(arg_params)
+
 for i, params in enumerate(arg_params):
 
-    with open('inputs_2/input_'+str(i), 'w') as f:
+    with open('inputs/input_'+str(i), 'w') as f:
         f.write(' '.join(list(map(str, params))))
 
 ### Simulation runs 

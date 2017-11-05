@@ -1,0 +1,11 @@
+
+=======================
+2017-11-03 19:37:18
+Macro cell arrival rate: 2.0
+Macro cell idle power: 0.7 * busy power
+Small cell arrival rate: 9.0
+Small cell setup time  : 1.0
+Small cell idle timer  : 113.78
+
+----------------------
+Macro_Small	Macro_Small	Macro_Small	Macro_Small	Macro_Small

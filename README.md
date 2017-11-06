@@ -16,4 +16,11 @@ energy consumption under a given performance constraint (mean response time).
 # Converting constrained optimization to unconstrained
 The constrained optimization 
 
-<a href="https://www.codecogs.com/eqnedit.php?latex=\begin{eqnarray}&space;\begin{aligned}&space;\min&space;&&space;E[P]&space;\\&space;&&space;E[T]\le&space;t^\mathrm{max}\nonumber&space;\\&space;\end{aligned}&space;\end{eqnarray}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\begin{eqnarray}&space;\begin{aligned}&space;\min&space;&&space;E[P]&space;\\&space;&&space;E[T]\le&space;t^\mathrm{max}\nonumber&space;\\&space;\end{aligned}&space;\end{eqnarray}" title="\begin{eqnarray} \begin{aligned} \min & E[P] \\ & E[T]\le t^\mathrm{max}\nonumber \\ \end{aligned} \end{eqnarray}" /></a>
+<a href="https://www.codecogs.com/eqnedit.php?latex=\underset{\Pi}{\text{minimize&space;}}&space;E[P^\Pi]&space;\\&space;\text{subject&space;to&space;}&space;E[T^\Pi]\le&space;t^\mathrm{max}\nonumber&space;\\" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\underset{\Pi}{\text{minimize&space;}}&space;E[P^\Pi]&space;\\&space;\text{subject&space;to&space;}&space;E[T^\Pi]\le&space;t^\mathrm{max}\nonumber&space;\\" title="\underset{\Pi}{\text{minimize }} E[P^\Pi] \\ \text{subject to } E[T^\Pi]\le t^\mathrm{max}\nonumber \\" /></a>
+
+can be transformed to an unconstrained weighted sum optimization using the [Lagragian
+multiplier](https://en.wikipedia.org/wiki/Lagrange_multiplier), where <a href="https://www.codecogs.com/eqnedit.php?latex=\Pi" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\Pi" title="\Pi" /></a> is 
+the set of dynamic policies, E[T] denotes mean response time, and E[P] represents mean power
+consumption. The resulting Lagrangian multiplier can then be iteratively
+updated by applying techniques like gradient descent to minimize the weighted sum of performance
+and energy.

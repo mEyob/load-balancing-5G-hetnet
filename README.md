@@ -37,4 +37,5 @@ to start the small cell from a sleep state), and idle timer. The number of small
 The outputs are: mean response time and mean power consumption under the optimized policy.
 
 ## How to run the simulator
-To run the simulator in a supercomputing environment as a batch job, see the help screen of the [automated-runs.py](simulator/automated-runs.py) by executing ./automated-runs.py -h on the commandline.
+To run the simulator in a supercomputing environment as a batch job, use the [param_values.py](simulator/param_values.py) script to 
+generate input parameters and the [./automated-runs.py](simulator/automated-runs.py) script to run the simulator.

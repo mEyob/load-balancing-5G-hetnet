@@ -11,10 +11,10 @@ setup_delay = args.s
 
 arg_params = []
 
-for laMac in [2]:
-    for laS in [1, 4, 6, 9]:
+for macro_arrival_rate in [2]:
+    for smll_arrival_rate in [1, 4, 6, 9]:
         for idle in [0, 1, 2, 4, 8, 128, 512, 1024]:
-            arg_params.append([laMac, laS, setup_delay, idle/laS])
+            arg_params.append([macro_arrival_rate, smll_arrival_rate, setup_delay, idle/smll_arrival_rate])
 
 arg_params.extend(arg_params)
 

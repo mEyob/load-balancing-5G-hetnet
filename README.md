@@ -1,15 +1,17 @@
 ## Introduction
 
-This repo provides a mini python simulation package for energy-aware load balancing of 
-user traffic in 5G hetrogeneous networks. To this end, user request scheduling 
-is modeled as a Constrained Markov Decision Process (CMDP). As depicted in the
+This repo provides a python simulation package for energy-aware load balancing of 
+user traffic in 5G hetrogeneous networks.  As depicted in the
 following figure, the network consists
-of a single Macro cell and a number of small cells. Small cells provide higher
+of a single Macro cell and a number of small cells. User traffic is assumed to be an 
+elastic data traffic following a Poisson arrival process. Small cells provide higher
 data rate to users within their coverage area, but they can also be turned off 
-to save energy when demand is low. Thus the task is to develop a dynamic scheduling 
+to save energy when demand is low. Thus the task is to develop a dynamic load (un)balancing 
 policy that creates energy saving opportunities by offloading user traffic to macro 
-cell whenever possible. More specifically, the scheduling policy should minimize 
+cell whenever possible. More specifically, the target is to minimize 
 energy consumption under a given performance constraint (mean response time).
+To this end, user request scheduling 
+is modeled as a Constrained Markov Decision Process (CMDP).
 
 <img src="hetnet-model.png" alt="perHr" style="width: 100px; height: 100px" />
 
@@ -29,9 +31,10 @@ and energy.
 Macro cell input parameters: Idle power, busy power, service rates for its own users (blue black in the above figure) and 
 users offloaded from small cells (green).
 Small cell input parameters: Idle, busy, setup, and sleep power consumption values. Service rate, setup time (time it takes 
-to start the small cell from a sleep state), and idle timer.
+to start the small cell from a sleep state), and idle timer. The number of small cells can also be arbitrarily set.
 
 ## Outputs
 The outputs are: mean response time and mean power consumption under the optimized policy.
 
-## How to run simulator
+## How to run the simulator
+To run the simulator in a supercomputing environment as a batch job, see the help screen of the [automated-runs.py](simulator/automated-runs.py) by executing ./automated-runs.py -h on the commandline.

@@ -1,6 +1,6 @@
 ## Introduction
 
-This repo provides a mini python optimization package for energy-aware load balancing of 
+This repo provides a mini python simulation package for energy-aware load balancing of 
 user traffic in 5G hetrogeneous networks. To this end, user request scheduling 
 is modeled as a Constrained Markov Decision Process (CMDP). As depicted in the
 following figure, the network consists
@@ -8,7 +8,7 @@ of a single Macro cell and a number of small cells. Small cells provide higher
 data rate to users within their coverage area, but they can also be turned off 
 to save energy when demand is low. Thus the task is to develop a dynamic scheduling 
 policy that creates energy saving opportunities by offloading user traffic to macro 
-cell whenever possible. More specifically, the scheduling policy should minimizes 
+cell whenever possible. More specifically, the scheduling policy should minimize 
 energy consumption under a given performance constraint (mean response time).
 
 <img src="hetnet-model.png" alt="perHr" style="width: 100px; height: 100px" />
@@ -24,3 +24,14 @@ the set of dynamic policies, E[T] denotes mean response time, and E[P] represent
 consumption. The resulting Lagrangian multiplier can then be iteratively
 updated by applying techniques like gradient descent to minimize the weighted sum of performance
 and energy.
+
+## Inputs
+Macro cell input parameters: Idle power, busy power, service rates for its own users (blue black in the above figure) and 
+users offloaded from small cells (green).
+Small cell input parameters: Idle, busy, setup, and sleep power consumption values. Service rate, setup time (time it takes 
+to start the small cell from a sleep state), and idle timer.
+
+## Outputs
+The outputs are: mean response time and mean power consumption under the optimized policy.
+
+## How to run simulator

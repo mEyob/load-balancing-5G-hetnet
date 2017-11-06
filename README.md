@@ -3,8 +3,8 @@
 This repo provides a python simulation package for energy-aware load balancing of 
 user traffic in 5G hetrogeneous networks.  As depicted in the
 following figure, the network consists
-of a single Macro cell and a number of small cells. User traffic is assumed to be an 
-elastic data traffic following a Poisson arrival process. Small cells provide higher
+of a single Macro cell and a number of small cells. Users generate elastic data traffic 
+according to a Poisson arrival process. Small cells provide higher
 data rate to users within their coverage area, but they can also be turned off 
 to save energy when demand is low. Thus the task is to develop a dynamic load (un)balancing 
 policy that creates energy saving opportunities by offloading user traffic to macro 

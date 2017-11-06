@@ -201,7 +201,7 @@ class Controller:
             self.header = False
 
         self.write('{:.5f}'.format(beta), stream=output)
-        self.write(self.cells[0].arr_rate, self.cells[1].arr_rate, self.cells[1].avg_idl_time, self.cells[1].stp_rate, stream=output)
+        self.write(self.cells[0].arr_rate, self.cells[1].arr_rate, self.cells[1].avg_idl_time, 1/self.cells[1].stp_rate, stream=output)
         Job.write_stats(output)
 
         avg_resp_time = Job.avg_resp_time
@@ -231,7 +231,7 @@ def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=N
     else:
         log        = output[:-3]+'log'
         inputnum   = re.findall('_([0-9]+)', output)[0]
-        decisions  = 'dispatch_decisions_'+inputnum+'.txt'
+        decisions  = 'dispatch_decisions/dispatch_decisions_'+inputnum+'.txt'
 
     error_pct, avg_resp_time          = np.inf, np.inf
     iter_cnt, beta, opt_beta, stable_count      = 0, 0, 0, 0

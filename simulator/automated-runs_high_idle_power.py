@@ -35,7 +35,7 @@ macro_params = namedtuple('macro_params',['arr_rate', 'serv_rate', 'idl_power', 
 small_params = namedtuple('small_params', ['arr_rate', 'serv_rate', 'idl_power', 'bsy_power', 'slp_power', 'stp_power', 'stp_rate', 'switchoff_rate'])
 
 macro    = macro_params(0, [12.34, 6.37, 6.37, 6.37, 6.37], 1000, 1000)
-small    = small_params(9, 18.73, 70, 100, 0, 100, 1, 10000000)
+small    = small_params(9, 18.73, 70, 100, 0, 100, small_setup_rate, 10000000)
 max_time = 2000000/9
 #max_time  = 100
 

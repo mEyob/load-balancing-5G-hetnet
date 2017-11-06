@@ -10,3 +10,5 @@ policy that creates energy saving opportunities by offloading user traffic to ma
 cell whenever possible. More specifically, the scheduling policy should minimizes 
 energy consumption under a given performance constraint (mean response time).
 
+<img src="hetnet-model.png" alt="perHr" style="width: 200px; height: 200px" />
+

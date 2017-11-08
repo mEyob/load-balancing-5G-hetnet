@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "automated-runs.py", line 60, in <module>
+    output='data/setup_'+args.s+'/output_'+str(args.input)+'.csv')
+  File "/home/gebrehm1/load-balancing-5G-hetnet/simulator/controller.py", line 331, in beta_optimization
+    return opt_beta, final_resp_time, min_avg_power
+UnboundLocalError: local variable 'final_resp_time' referenced before assignment
+srun: error: wsm100: task 0: Exited with exit code 1
+srun: Terminating job step 25361540.0

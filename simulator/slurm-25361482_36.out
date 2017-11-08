@@ -1,0 +1,5 @@
+slurmstepd: error: *** STEP 25361518.0 ON opt24 CANCELLED AT 2017-11-08T02:52:03 DUE TO TIME LIMIT ***
+slurmstepd: error: *** JOB 25361518 ON opt24 CANCELLED AT 2017-11-08T02:52:03 DUE TO TIME LIMIT ***
+srun: error: opt24: task 0: Terminated
+srun: Terminating job step 25361518.0
+srun: Force Terminated job step 25361518.0

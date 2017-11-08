@@ -1,0 +1,5 @@
+slurmstepd: error: *** JOB 25361497 ON opt63 CANCELLED AT 2017-11-08T02:52:03 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 25361497.0 ON opt63 CANCELLED AT 2017-11-08T02:52:03 DUE TO TIME LIMIT ***
+srun: error: opt63: task 0: Terminated
+srun: Terminating job step 25361497.0
+srun: Force Terminated job step 25361497.0

@@ -3,7 +3,7 @@
 #SBATCH -t 10:00:00
 #SBATCH --mem-per-cpu=15G
 
-#SBATCH --array=0-31
+#SBATCH --array=1-44
 
 
-srun automated-runs.py --input $SLURM_ARRAY_TASK_ID
+srun automated-runs.py 1.0 --input $SLURM_ARRAY_TASK_ID

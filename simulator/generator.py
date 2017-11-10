@@ -3,6 +3,7 @@ import random
 import numpy as np
 from datetime import datetime
 import re
+import sys
 
 class TraffGenerator:
     '''
@@ -112,7 +113,7 @@ class TraffGenerator:
 
 
     def write_decisions(self, output):
-        if output:
+        if output != sys.stdout:
             inputnum = re.findall('_([0-9]+)', output)[0]
             filename =  'dispatch_decisions/dispatch_decisions_'+inputnum+'.txt'
         else:

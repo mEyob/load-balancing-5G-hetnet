@@ -59,9 +59,7 @@ class Controller:
 
     def write(self, *args,  stream=None):
 
-        if stream == None:
-            stream = sys.stdout
-        else:
+        if stream != sys.stdout:
             stream = open(stream, 'a')
         # if typ == 'pwr':
         #     stream.write('{:.3f}\n'.format(args[0]))
@@ -350,7 +348,7 @@ if __name__ == '__main__':
 
 
     macro = macro_params(2, [12.34, 6.37, 6.37, 6.37, 6.37], 700, 1000)
-    small = small_params(4, 18.73, 70, 100, 0, 100, 1, 100000000)
+    small = small_params(1, 18.73, 70, 100, 0, 100, 1, 100000000)
 
     # macro = macro_params(0, [1, 1], 120, 200)
     # small = small_params(1, 1, 120, 200, 10, 200, 0.1, 100000000)
@@ -365,5 +363,5 @@ if __name__ == '__main__':
     # cont = Controller(macro, small, 1)
     # cont.simulate('fpi', 10000, 0.0)
 
-    res=beta_optimization(macro, small, 500, 4, output='data/test_12.csv')  
+    res=beta_optimization(macro, small, 100000, 4) #output='data/test_12.csv')  
     print(res)

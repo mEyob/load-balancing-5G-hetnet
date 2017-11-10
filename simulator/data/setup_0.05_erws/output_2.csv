@@ -1,0 +1,4 @@
+
+beta,macro_arrival,small_arrival,avg_idle_time,avg_setup_time,num_of_jobs,avg_resp_time,var_resp_time,avg_power
+0.01000,2.00,1.00,0.12,0.05,3800803,0.09470,0.00649,811.56
+0.01000,2.00,1.00,0.12,0.05,3800374,0.09467,0.00651,811.48

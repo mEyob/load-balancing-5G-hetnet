@@ -225,7 +225,7 @@ def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=N
         output = sys.stdout
 
         log        = 'log.log'
-        decisions  = 'dispatch-decisions.txt'
+        decisions  = 'dispatch_decisions/dispatch-decisions.txt'
     else:
         log        = output[:-3]+'log'
         inputnum   = re.findall('_([0-9]+)', output)[0]

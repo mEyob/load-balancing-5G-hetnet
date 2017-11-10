@@ -117,7 +117,7 @@ class TraffGenerator:
             inputnum = re.findall('_([0-9]+)', output)[0]
             filename =  'dispatch_decisions/dispatch_decisions_'+inputnum+'.txt'
         else:
-            filename = 'dispatch_decisions/decisions.txt'
+            filename = 'dispatch_decisions/dispatch-decisions.txt'
 
 
 

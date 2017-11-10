@@ -56,7 +56,7 @@ class MacroCell(Cell):
 
             inputs = ' '.join([rates, str(self.idl_power), str(self.bsy_power)])
 
-            subprocess.run('../macro-cell-value-coefficients.m ' + inputs, shell=True, env=dict(os.environ, PATH='/Applications/Mathematica.app/Contents/MacOS'))
+            subprocess.run('./macro-cell-value-coefficients.m ' + inputs, shell=True, env=dict(os.environ, PATH='/Applications/Mathematica.app/Contents/MacOS'))
 
 
 

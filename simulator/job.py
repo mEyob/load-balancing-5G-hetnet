@@ -34,9 +34,7 @@ class Job:
     
     @classmethod
     def write_stats(cls, stream=None):
-        if stream == None:
-            stream = sys.stdout
-        else:
+        if stream != sys.stdout:
             stream = open(stream, 'a')
         # stream.write('\nTotal jobs: {:25}\n'.format(cls.num_of_jobs))
         # stream.write('\tAverage response time {:11.5f}\n'.format(cls.avg_resp_time))

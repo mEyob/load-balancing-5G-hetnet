@@ -210,7 +210,7 @@ class Controller:
 
 
 
-def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=None, learning_rate=1, init_policy=None, output=None, naive_run=True):
+def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=None, learning_rate=1, init_policy=None, output=None, naive_run=False):
 
     controller = Controller(macro_params, small_params, K,init_policy)
 
@@ -261,8 +261,8 @@ def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=N
         delay_constraint = 0.9 * result['perf']
     
 
-    #while error_pct > ERROR_PCT:
-    while iter_cnt < MAX_ITERATIONS:
+    while error_pct > ERROR_PCT:
+    #while iter_cnt < MAX_ITERATIONS:
 
         if iter_cnt > MAX_ITERATIONS:
             # If mean response time cannot get close enough
@@ -295,8 +295,8 @@ def beta_optimization(macro_params, small_params, max_time, K,delay_constraint=N
 
             if beta == 0 and error < 0:
                 min_avg_power = result['energy']
-                opt_beta   = beta
-                final_resp_time = avg_resp_time
+                opt_beta        = beta
+                final_resp_time = avg_resp_time 
 
                 with open(log, 'a') as logfile:
                     logfile.write('\n{:%Y-%m-%d %H:%M:%S}\tResponse time constraint cannot be met\n'.format(datetime.now()))

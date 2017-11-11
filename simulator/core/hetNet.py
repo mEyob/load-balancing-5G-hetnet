@@ -1,5 +1,5 @@
-from cell import Cell
-from job import Job
+from core.cell import Cell
+from core.job import Job
 
 import numpy as np
 import subprocess, os, json
@@ -56,7 +56,7 @@ class MacroCell(Cell):
 
             inputs = ' '.join([rates, str(self.idl_power), str(self.bsy_power)])
 
-            subprocess.run('./macro-cell-value-coefficients.m ' + inputs, shell=True, env=dict(os.environ, PATH='/Applications/Mathematica.app/Contents/MacOS'))
+            subprocess.run('../macro-cell-value-coefficients.m ' + inputs, shell=True, env=dict(os.environ, PATH='/Applications/Mathematica.app/Contents/MacOS'))
 
 
 
@@ -69,8 +69,9 @@ class MacroCell(Cell):
             with open(filename, 'r') as value_data:
                 coeffs = json.load(value_data)
         except:
-            print("File missing. Coefficient values need to be computed")
+            print("Coefficient file missing. Coefficient values need to be computed")
             return
+            
 
         self.coeffs = coeffs
 

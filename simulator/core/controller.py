@@ -5,9 +5,9 @@
 # event is 'a', 'd' for macro cell representing arrival and departure, respectively
 #          'a', 'd', 'i', 's' for small cell, where i is idle timer expiration and 's' setup complete.
 
-from hetNet import MacroCell, SmallCell
-from generator import TraffGenerator
-from job import Job
+from core.hetNet import MacroCell, SmallCell
+from core.generator import TraffGenerator
+from core.job import Job
 
 import sys, random
 from collections import namedtuple
@@ -61,13 +61,6 @@ class Controller:
 
         if stream != sys.stdout:
             stream = open(stream, 'a')
-        # if typ == 'pwr':
-        #     stream.write('{:.3f}\n'.format(args[0]))
-        # elif typ == 'beta':
-        #     stream.write('{:.5f}'.format(args[0]))
-        # elif typ == 'header':
-        #     stream.write('beta,macro_arrival,small_arrival,avg_idle_time,num_of_jobs,avg_resp_time,var_resp_time,avg_power\n')
-        # elif typ == 'cell_atr':
         for arg in args:
             if type(arg) == str:
                 stream.write('{}'.format(arg))

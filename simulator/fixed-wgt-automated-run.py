@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 
 import argparse
-import controller
+import core
 from collections import namedtuple
-import os
+import os, sys
 import fileinput
+
+simpath = os.getcwd()
+simpath = os.path.join(simpath, 'core')
+sys.path.append(simpath)
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument("s",help='Setup delay of small cell')
 parser.add_argument("-i","--input", help='Line number in input file')
-parser.add_argument("-n","--ncells", help='Number of small cells', type=float)
+parser.add_argument("-n","--ncells", help='Number of small cells', type=int)
 
 args = parser.parse_args()
 
@@ -21,7 +25,7 @@ else:
 if args.input:
     line_no = args.input
 else:
-    line_no = 1
+    line_no = '1'
 for line in fileinput.input('inputs/setup_delay_'+args.s):
     if str(fileinput.filelineno()) == line_no:
         inputs = line
@@ -49,21 +53,12 @@ small = small_params(small_arr_rate, 18.73, 70, 100, 0, 100, small_setup_rate, s
 
 max_time = 4000000/(macro.arr_rate + num_small_cells*small.arr_rate) 
 
-cont = controller.Controller(macro, small, num_small_cells)
+cont = core.controller.Controller(macro, small, num_small_cells)
 
 cont.simulate('rnd', max_time, 0.01, compute_coeffs=False, output='data/setup_'+args.s+'_erws/output_'+str(args.input)+'.csv')
 
 cont.simulate('fpi', max_time, 0.01, compute_coeffs=False, output='data/setup_'+args.s+'_erws/output_'+str(args.input)+'.csv')
 
-#result = controller.beta_optimization(
-#    macro,
-#    small, 
-#    max_time, 
-#    num_small_cells,
-#    delay_constraint=delay_const, 
-#    learning_rate=1, 
-#    init_policy=None, 
-#    output='data/setup_'+args.s+'/output_'+str(args.input)+'.csv')
 
 #beta,macro_arrival,small_arrival,avg_idle_time,avg_setup_time,num_of_jobs,avg_resp_time,var_resp_time,avg_power
 

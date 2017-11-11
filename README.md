@@ -40,3 +40,8 @@ The outputs are: mean response time and mean power consumption under the optimiz
 ## How to run the simulator
 To run the simulator in a supercomputing environment as a batch job, use the [param_values.py](simulator/param_values.py) script to 
 generate input parameters and the [./automated-runs.py](simulator/automated-runs.py) script to run the simulator.
+
+On the other hand, to run the simulator for a single set of parameters in interactive mode, run [./single-runs.py](simulator/single-runs.py). 
+
+## Computational complexity
+Computational complexity is the reason for buidling a simulator instead of directly computing numerical values for the MDP based load balancer. That is, to make forwarding decisions load balancing algorithm needs to dynamically keep track of the number of requests in each cell and each cell's energy mode. Numerical values can be solved for small systems consisting few number of small cells along with the macro cell. However, the "curse of dimensionality" quickly kicks in for any reasonablly sized system. Code for solving a system of one small cell and one macro cell is given in [solitary-small-cell](./solitary-small-cell). 

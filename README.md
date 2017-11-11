@@ -29,19 +29,20 @@ updated by applying techniques like gradient descent to minimize the weighted su
 and energy.
 
 ## Inputs
-Macro cell input parameters: Idle power, busy power, service rates for its own users (blue black in the above figure) and 
+*Macro cell input parameters:* Idle power, busy power, service rates for its own users (blue black in the above figure) and 
 users offloaded from small cells (green).
-Small cell input parameters: Idle, busy, setup, and sleep power consumption values. Service rate, setup time (time it takes 
+
+*Small cell input parameters:* Idle, busy, setup, and sleep power consumption values. Service rate, setup time (time it takes 
 to start the small cell from a sleep state), and idle timer. The number of small cells can also be arbitrarily set.
 
 ## Outputs
-The outputs are: mean response time and mean power consumption under the optimized policy.
+The outputs are: **mean response time** and **mean power consumption** under the optimized policy.
 
 ## How to run the simulator
 To run the simulator in a supercomputing environment as a batch job, use the [param_values.py](simulator/param_values.py) script to 
 generate input parameters and the [./automated-runs.py](simulator/automated-runs.py) script to run the simulator.
 
-On the other hand, to run the simulator for a single set of parameters in interactive mode, run [./single-runs.py](simulator/single-runs.py). 
+On the other hand, to run the simulator for a single set of parameters in interactive mode, run [./single-runs.py](simulator/single-run.py) or see the available options by running *./single-run.py -h* in the command line. 
 
 ## Computational complexity
-Computational complexity is the reason for buidling a simulator instead of directly computing numerical values for the MDP based load balancer. That is, to make forwarding decisions load balancing algorithm needs to dynamically keep track of the number of requests in each cell and each cell's energy mode. Numerical values can be solved for small systems consisting few number of small cells along with the macro cell. However, the "curse of dimensionality" quickly kicks in for any reasonablly sized system. Code for solving a system of one small cell and one macro cell is given in [solitary-small-cell](./solitary-small-cell). 
+Computational complexity is the reason for buidling a simulator instead of directly computing numerical values for the MDP based load balancer. That is, to make forwarding decisions load balancing algorithm needs to dynamically keep track of the number of requests in each cell and each cell's energy mode. Numerical values can be solved for small systems consisting few number of small cells along with the macro cell. However, the "curse of dimensionality" quickly kicks in for any reasonablly sized system. Code for solving a system of one small cell and one macro cell is given in [solitary-small-cell](simulator/solitary-small-cell). 

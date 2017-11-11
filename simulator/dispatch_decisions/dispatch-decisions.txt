@@ -30,3 +30,17 @@ Macro_Small	Macro_Small	Macro_Small	Macro_Small	Macro_Small
 [199921, 0]	[99520, 1]	[99687, 1]	[100058, 1]	[100268, 1]
 [199921, 0]	[99520, 1]	[99687, 1]	[100058, 1]	[100268, 1]
 [199921, 0]	[99520, 1]	[99687, 1]	[100058, 1]	[100268, 1]
+
+=======================
+2017-11-11 17:54:00
+Macro cell arrival rate: 2
+Macro cell idle power: 0.7 * busy power
+Small cell arrival rate: 2
+Small cell setup time  : 1.0
+Small cell idle timer  : 0.1
+
+----------------------
+Macro_Small	Macro_Small	Macro_Small	Macro_Small	Macro_Small
+[20011, 0]	[0, 19974]	[0, 19984]	[0, 20165]	[0, 20089]
+[20214, 0]	[16197, 3888]	[16384, 3916]	[16093, 3834]	[16239, 3842]
+[19986, 0]	[0, 20051]	[0, 19971]	[0, 20311]	[0, 20157]

@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 
 import argparse
-import controller
+import core 
 from collections import namedtuple
-import os
+import os, sys
 import fileinput
+
+simpath = os.getcwd()
+simpath = os.path.join(simpath, 'core')
+sys.path.append(simpath)
 
 parser = argparse.ArgumentParser()
 
@@ -49,7 +53,7 @@ small = small_params(small_arr_rate, 18.73, 70, 100, 0, 100, small_setup_rate, s
 
 max_time = 4000000/(macro.arr_rate + num_small_cells*small.arr_rate) 
 
-result = controller.beta_optimization(
+result = core.controller.beta_optimization(
     macro,
     small, 
     max_time, 

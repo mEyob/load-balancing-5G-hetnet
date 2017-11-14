@@ -46,15 +46,19 @@ On the other hand, to run the simulator for a single set of parameters in intera
 
 Finally, for anyone interested in the implementations. The simulator consists of the six classes in [core](simulator/core).
 
-*Cell*:Is the core abstract class for both small and macro cells \\
+*Cell*:Is the core abstract class for both small and macro cells 
+
 *MacroCell* Inherits basic methods and attributes from *Cell* and adds more methods and attributes specific
-to the macro cell.\\
+to the macro cell.
+
 *SmallCell* Inherits basic methods and attributes from *Cell* and adds more methods and attributes specific
-to the small cell.\\
+to the small cell.
+
 *Job*: A job is something the network is something the network is expected to handle such as elastic 
-data traffic. It has key attributes like 'arrival time', 'remaining size' and 'origin'.\\
+data traffic. It has key attributes like 'arrival time', 'remaining size' and 'origin'.
+
 *TraffGenerator*: A traffic generator class for both macro and small cells. Initiats an instance of the
-Job class and 'dispatches' it to a macro or small cell depending on system state and the active dispatching method.\\
+Job class and 'dispatches' it to a macro or small cell depending on system state and the active dispatching method.
 *Controller*: Initiallizes all the required instances from the above class and dictates how the simulation evolves.
 
    

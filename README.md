@@ -44,5 +44,20 @@ generate input parameters and the [./automated-runs.py](simulator/automated-runs
 
 On the other hand, to run the simulator for a single set of parameters in interactive mode, run [./single-runs.py](simulator/single-run.py) or see the available options by running *./single-run.py -h* in the command line. 
 
+Finally, for anyone interested in the implementations. The simulator consists of the six classes in [core](simulator/core).
+
+*Cell*:Is the core abstract class for both small and macro cells \\
+*MacroCell* Inherits basic methods and attributes from *Cell* and adds more methods and attributes specific
+to the macro cell.\\
+*SmallCell* Inherits basic methods and attributes from *Cell* and adds more methods and attributes specific
+to the small cell.\\
+*Job*: A job is something the network is something the network is expected to handle such as elastic 
+data traffic. It has key attributes like 'arrival time', 'remaining size' and 'origin'.\\
+*TraffGenerator*: A traffic generator class for both macro and small cells. Initiats an instance of the
+Job class and 'dispatches' it to a macro or small cell depending on system state and the active dispatching method.\\
+*Controller*: Initiallizes all the required instances from the above class and dictates how the simulation evolves.
+
+   
+
 ## Computational complexity
 Computational complexity is the reason for buidling a simulator instead of directly computing numerical values for the MDP based load balancer. That is, to make forwarding decisions load balancing algorithm needs to dynamically keep track of the number of requests in each cell and each cell's energy mode. Numerical values can be solved for small systems consisting few number of small cells along with the macro cell. However, the "curse of dimensionality" quickly kicks in for any reasonablly sized system. Code for solving a system of one small cell and one macro cell is given in [solitary-small-cell](simulator/solitary-small-cell). 

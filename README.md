@@ -54,12 +54,13 @@ to the macro cell.
 *SmallCell* Inherits basic methods and attributes from *Cell* and adds more methods and attributes specific
 to the small cell.
 
-*Job*: A job is something the network is something the network is expected to handle such as elastic 
+*Job*: A job is something the network is expected to process such as elastic 
 data traffic. It has key attributes like 'arrival time', 'remaining size' and 'origin'.
 
 *TraffGenerator*: A traffic generator class for both macro and small cells. Initiats an instance of the
 Job class and 'dispatches' it to a macro or small cell depending on system state and the active dispatching method.
-*Controller*: Initiallizes all the required instances from the above class and dictates how the simulation evolves.
+
+*Controller*: Initiallizes all the required instances from the above classes and dictates how the simulation evolves.
 
    
 
